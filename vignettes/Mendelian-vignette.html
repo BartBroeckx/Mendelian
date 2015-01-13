@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<!-- saved from url=(0014)about:internet -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta http-equiv="x-ua-compatible" content="IE=9" >
+
+<title>Introduction</title>
+
+<style type="text/css">
+body, td {
+   font-family: sans-serif;
+   background-color: white;
+   font-size: 12px;
+   margin: 8px;
+}
+
+tt, code, pre {
+   font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
+}
+
+h1 { 
+   font-size:2.2em; 
+}
+
+h2 { 
+   font-size:1.8em; 
+}
+
+h3 { 
+   font-size:1.4em; 
+}
+
+h4 { 
+   font-size:1.0em; 
+}
+
+h5 { 
+   font-size:0.9em; 
+}
+
+h6 { 
+   font-size:0.8em; 
+}
+
+a:visited {
+   color: rgb(50%, 0%, 50%);
+}
+
+pre {	
+   margin-top: 0;
+   max-width: 95%;
+   border: 1px solid #ccc;
+   white-space: pre-wrap;
+}
+
+pre code {
+   display: block; padding: 0.5em;
+}
+
+code.r, code.cpp {
+   background-color: #F8F8F8;
+}
+
+table, td, th {
+  border: none;
+}
+
+blockquote {
+   color:#666666;
+   margin:0;
+   padding-left: 1em;
+   border-left: 0.5em #EEE solid;
+}
+
+hr {
+   height: 0px;
+   border-bottom: none;
+   border-top-width: thin;
+   border-top-style: dotted;
+   border-top-color: #999999;
+}
+
+@media print {
+   * { 
+      background: transparent !important; 
+      color: black !important; 
+      filter:none !important; 
+      -ms-filter: none !important; 
+   }
+
+   body { 
+      font-size:12pt; 
+      max-width:100%; 
+   }
+       
+   a, a:visited { 
+      text-decoration: underline; 
+   }
+
+   hr { 
+      visibility: hidden;
+      page-break-before: always;
+   }
+
+   pre, blockquote { 
+      padding-right: 1em; 
+      page-break-inside: avoid; 
+   }
+
+   tr, img { 
+      page-break-inside: avoid; 
+   }
+
+   img { 
+      max-width: 100% !important; 
+   }
+
+   @page :left { 
+      margin: 15mm 20mm 15mm 10mm; 
+   }
+     
+   @page :right { 
+      margin: 15mm 10mm 15mm 20mm; 
+   }
+
+   p, h2, h3 { 
+      orphans: 3; widows: 3; 
+   }
+
+   h2, h3 { 
+      page-break-after: avoid; 
+   }
+}
+
+</style>
+
+<!-- Styles for R syntax highlighter -->
+<style type="text/css">
+   pre .operator,
+   pre .paren {
+     color: rgb(104, 118, 135)
+   }
+
+   pre .literal {
+     color: rgb(88, 72, 246)
+   }
+
+   pre .number {
+     color: rgb(0, 0, 205);
+   }
+
+   pre .comment {
+     color: rgb(76, 136, 107);
+   }
+
+   pre .keyword {
+     color: rgb(0, 0, 255);
+   }
+
+   pre .identifier {
+     color: rgb(0, 0, 0);
+   }
+
+   pre .string {
+     color: rgb(3, 106, 7);
+   }
+</style>
+
+<!-- R syntax highlighter -->
+<script type="text/javascript">
+var hljs=new function(){function m(p){return p.replace(/&/gm,"&amp;").replace(/</gm,"&lt;")}function f(r,q,p){return RegExp(q,"m"+(r.cI?"i":"")+(p?"g":""))}function b(r){for(var p=0;p<r.childNodes.length;p++){var q=r.childNodes[p];if(q.nodeName=="CODE"){return q}if(!(q.nodeType==3&&q.nodeValue.match(/\s+/))){break}}}function h(t,s){var p="";for(var r=0;r<t.childNodes.length;r++){if(t.childNodes[r].nodeType==3){var q=t.childNodes[r].nodeValue;if(s){q=q.replace(/\n/g,"")}p+=q}else{if(t.childNodes[r].nodeName=="BR"){p+="\n"}else{p+=h(t.childNodes[r])}}}if(/MSIE [678]/.test(navigator.userAgent)){p=p.replace(/\r/g,"\n")}return p}function a(s){var r=s.className.split(/\s+/);r=r.concat(s.parentNode.className.split(/\s+/));for(var q=0;q<r.length;q++){var p=r[q].replace(/^language-/,"");if(e[p]){return p}}}function c(q){var p=[];(function(s,t){for(var r=0;r<s.childNodes.length;r++){if(s.childNodes[r].nodeType==3){t+=s.childNodes[r].nodeValue.length}else{if(s.childNodes[r].nodeName=="BR"){t+=1}else{if(s.childNodes[r].nodeType==1){p.push({event:"start",offset:t,node:s.childNodes[r]});t=arguments.callee(s.childNodes[r],t);p.push({event:"stop",offset:t,node:s.childNodes[r]})}}}}return t})(q,0);return p}function k(y,w,x){var q=0;var z="";var s=[];function u(){if(y.length&&w.length){if(y[0].offset!=w[0].offset){return(y[0].offset<w[0].offset)?y:w}else{return w[0].event=="start"?y:w}}else{return y.length?y:w}}function t(D){var A="<"+D.nodeName.toLowerCase();for(var B=0;B<D.attributes.length;B++){var C=D.attributes[B];A+=" "+C.nodeName.toLowerCase();if(C.value!==undefined&&C.value!==false&&C.value!==null){A+='="'+m(C.value)+'"'}}return A+">"}while(y.length||w.length){var v=u().splice(0,1)[0];z+=m(x.substr(q,v.offset-q));q=v.offset;if(v.event=="start"){z+=t(v.node);s.push(v.node)}else{if(v.event=="stop"){var p,r=s.length;do{r--;p=s[r];z+=("</"+p.nodeName.toLowerCase()+">")}while(p!=v.node);s.splice(r,1);while(r<s.length){z+=t(s[r]);r++}}}}return z+m(x.substr(q))}function j(){function q(x,y,v){if(x.compiled){return}var u;var s=[];if(x.k){x.lR=f(y,x.l||hljs.IR,true);for(var w in x.k){if(!x.k.hasOwnProperty(w)){continue}if(x.k[w] instanceof Object){u=x.k[w]}else{u=x.k;w="keyword"}for(var r in u){if(!u.hasOwnProperty(r)){continue}x.k[r]=[w,u[r]];s.push(r)}}}if(!v){if(x.bWK){x.b="\\b("+s.join("|")+")\\s"}x.bR=f(y,x.b?x.b:"\\B|\\b");if(!x.e&&!x.eW){x.e="\\B|\\b"}if(x.e){x.eR=f(y,x.e)}}if(x.i){x.iR=f(y,x.i)}if(x.r===undefined){x.r=1}if(!x.c){x.c=[]}x.compiled=true;for(var t=0;t<x.c.length;t++){if(x.c[t]=="self"){x.c[t]=x}q(x.c[t],y,false)}if(x.starts){q(x.starts,y,false)}}for(var p in e){if(!e.hasOwnProperty(p)){continue}q(e[p].dM,e[p],true)}}function d(B,C){if(!j.called){j();j.called=true}function q(r,M){for(var L=0;L<M.c.length;L++){if((M.c[L].bR.exec(r)||[null])[0]==r){return M.c[L]}}}function v(L,r){if(D[L].e&&D[L].eR.test(r)){return 1}if(D[L].eW){var M=v(L-1,r);return M?M+1:0}return 0}function w(r,L){return L.i&&L.iR.test(r)}function K(N,O){var M=[];for(var L=0;L<N.c.length;L++){M.push(N.c[L].b)}var r=D.length-1;do{if(D[r].e){M.push(D[r].e)}r--}while(D[r+1].eW);if(N.i){M.push(N.i)}return f(O,M.join("|"),true)}function p(M,L){var N=D[D.length-1];if(!N.t){N.t=K(N,E)}N.t.lastIndex=L;var r=N.t.exec(M);return r?[M.substr(L,r.index-L),r[0],false]:[M.substr(L),"",true]}function z(N,r){var L=E.cI?r[0].toLowerCase():r[0];var M=N.k[L];if(M&&M instanceof Array){return M}return false}function F(L,P){L=m(L);if(!P.k){return L}var r="";var O=0;P.lR.lastIndex=0;var M=P.lR.exec(L);while(M){r+=L.substr(O,M.index-O);var N=z(P,M);if(N){x+=N[1];r+='<span class="'+N[0]+'">'+M[0]+"</span>"}else{r+=M[0]}O=P.lR.lastIndex;M=P.lR.exec(L)}return r+L.substr(O,L.length-O)}function J(L,M){if(M.sL&&e[M.sL]){var r=d(M.sL,L);x+=r.keyword_count;return r.value}else{return F(L,M)}}function I(M,r){var L=M.cN?'<span class="'+M.cN+'">':"";if(M.rB){y+=L;M.buffer=""}else{if(M.eB){y+=m(r)+L;M.buffer=""}else{y+=L;M.buffer=r}}D.push(M);A+=M.r}function G(N,M,Q){var R=D[D.length-1];if(Q){y+=J(R.buffer+N,R);return false}var P=q(M,R);if(P){y+=J(R.buffer+N,R);I(P,M);return P.rB}var L=v(D.length-1,M);if(L){var O=R.cN?"</span>":"";if(R.rE){y+=J(R.buffer+N,R)+O}else{if(R.eE){y+=J(R.buffer+N,R)+O+m(M)}else{y+=J(R.buffer+N+M,R)+O}}while(L>1){O=D[D.length-2].cN?"</span>":"";y+=O;L--;D.length--}var r=D[D.length-1];D.length--;D[D.length-1].buffer="";if(r.starts){I(r.starts,"")}return R.rE}if(w(M,R)){throw"Illegal"}}var E=e[B];var D=[E.dM];var A=0;var x=0;var y="";try{var s,u=0;E.dM.buffer="";do{s=p(C,u);var t=G(s[0],s[1],s[2]);u+=s[0].length;if(!t){u+=s[1].length}}while(!s[2]);if(D.length>1){throw"Illegal"}return{r:A,keyword_count:x,value:y}}catch(H){if(H=="Illegal"){return{r:0,keyword_count:0,value:m(C)}}else{throw H}}}function g(t){var p={keyword_count:0,r:0,value:m(t)};var r=p;for(var q in e){if(!e.hasOwnProperty(q)){continue}var s=d(q,t);s.language=q;if(s.keyword_count+s.r>r.keyword_count+r.r){r=s}if(s.keyword_count+s.r>p.keyword_count+p.r){r=p;p=s}}if(r.language){p.second_best=r}return p}function i(r,q,p){if(q){r=r.replace(/^((<[^>]+>|\t)+)/gm,function(t,w,v,u){return w.replace(/\t/g,q)})}if(p){r=r.replace(/\n/g,"<br>")}return r}function n(t,w,r){var x=h(t,r);var v=a(t);var y,s;if(v){y=d(v,x)}else{return}var q=c(t);if(q.length){s=document.createElement("pre");s.innerHTML=y.value;y.value=k(q,c(s),x)}y.value=i(y.value,w,r);var u=t.className;if(!u.match("(\\s|^)(language-)?"+v+"(\\s|$)")){u=u?(u+" "+v):v}if(/MSIE [678]/.test(navigator.userAgent)&&t.tagName=="CODE"&&t.parentNode.tagName=="PRE"){s=t.parentNode;var p=document.createElement("div");p.innerHTML="<pre><code>"+y.value+"</code></pre>";t=p.firstChild.firstChild;p.firstChild.cN=s.cN;s.parentNode.replaceChild(p.firstChild,s)}else{t.innerHTML=y.value}t.className=u;t.result={language:v,kw:y.keyword_count,re:y.r};if(y.second_best){t.second_best={language:y.second_best.language,kw:y.second_best.keyword_count,re:y.second_best.r}}}function o(){if(o.called){return}o.called=true;var r=document.getElementsByTagName("pre");for(var p=0;p<r.length;p++){var q=b(r[p]);if(q){n(q,hljs.tabReplace)}}}function l(){if(window.addEventListener){window.addEventListener("DOMContentLoaded",o,false);window.addEventListener("load",o,false)}else{if(window.attachEvent){window.attachEvent("onload",o)}else{window.onload=o}}}var e={};this.LANGUAGES=e;this.highlight=d;this.highlightAuto=g;this.fixMarkup=i;this.highlightBlock=n;this.initHighlighting=o;this.initHighlightingOnLoad=l;this.IR="[a-zA-Z][a-zA-Z0-9_]*";this.UIR="[a-zA-Z_][a-zA-Z0-9_]*";this.NR="\\b\\d+(\\.\\d+)?";this.CNR="\\b(0[xX][a-fA-F0-9]+|(\\d+(\\.\\d*)?|\\.\\d+)([eE][-+]?\\d+)?)";this.BNR="\\b(0b[01]+)";this.RSR="!|!=|!==|%|%=|&|&&|&=|\\*|\\*=|\\+|\\+=|,|\\.|-|-=|/|/=|:|;|<|<<|<<=|<=|=|==|===|>|>=|>>|>>=|>>>|>>>=|\\?|\\[|\\{|\\(|\\^|\\^=|\\||\\|=|\\|\\||~";this.ER="(?![\\s\\S])";this.BE={b:"\\\\.",r:0};this.ASM={cN:"string",b:"'",e:"'",i:"\\n",c:[this.BE],r:0};this.QSM={cN:"string",b:'"',e:'"',i:"\\n",c:[this.BE],r:0};this.CLCM={cN:"comment",b:"//",e:"$"};this.CBLCLM={cN:"comment",b:"/\\*",e:"\\*/"};this.HCM={cN:"comment",b:"#",e:"$"};this.NM={cN:"number",b:this.NR,r:0};this.CNM={cN:"number",b:this.CNR,r:0};this.BNM={cN:"number",b:this.BNR,r:0};this.inherit=function(r,s){var p={};for(var q in r){p[q]=r[q]}if(s){for(var q in s){p[q]=s[q]}}return p}}();hljs.LANGUAGES.cpp=function(){var a={keyword:{"false":1,"int":1,"float":1,"while":1,"private":1,"char":1,"catch":1,"export":1,virtual:1,operator:2,sizeof:2,dynamic_cast:2,typedef:2,const_cast:2,"const":1,struct:1,"for":1,static_cast:2,union:1,namespace:1,unsigned:1,"long":1,"throw":1,"volatile":2,"static":1,"protected":1,bool:1,template:1,mutable:1,"if":1,"public":1,friend:2,"do":1,"return":1,"goto":1,auto:1,"void":2,"enum":1,"else":1,"break":1,"new":1,extern:1,using:1,"true":1,"class":1,asm:1,"case":1,typeid:1,"short":1,reinterpret_cast:2,"default":1,"double":1,register:1,explicit:1,signed:1,typename:1,"try":1,"this":1,"switch":1,"continue":1,wchar_t:1,inline:1,"delete":1,alignof:1,char16_t:1,char32_t:1,constexpr:1,decltype:1,noexcept:1,nullptr:1,static_assert:1,thread_local:1,restrict:1,_Bool:1,complex:1},built_in:{std:1,string:1,cin:1,cout:1,cerr:1,clog:1,stringstream:1,istringstream:1,ostringstream:1,auto_ptr:1,deque:1,list:1,queue:1,stack:1,vector:1,map:1,set:1,bitset:1,multiset:1,multimap:1,unordered_set:1,unordered_map:1,unordered_multiset:1,unordered_multimap:1,array:1,shared_ptr:1}};return{dM:{k:a,i:"</",c:[hljs.CLCM,hljs.CBLCLM,hljs.QSM,{cN:"string",b:"'\\\\?.",e:"'",i:"."},{cN:"number",b:"\\b(\\d+(\\.\\d*)?|\\.\\d+)(u|U|l|L|ul|UL|f|F)"},hljs.CNM,{cN:"preprocessor",b:"#",e:"$"},{cN:"stl_container",b:"\\b(deque|list|queue|stack|vector|map|set|bitset|multiset|multimap|unordered_map|unordered_set|unordered_multiset|unordered_multimap|array)\\s*<",e:">",k:a,r:10,c:["self"]}]}}}();hljs.LANGUAGES.r={dM:{c:[hljs.HCM,{cN:"number",b:"\\b0[xX][0-9a-fA-F]+[Li]?\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"number",b:"\\b\\d+(?:[eE][+\\-]?\\d*)?L\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"number",b:"\\b\\d+\\.(?!\\d)(?:i\\b)?",e:hljs.IMMEDIATE_RE,r:1},{cN:"number",b:"\\b\\d+(?:\\.\\d*)?(?:[eE][+\\-]?\\d*)?i?\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"number",b:"\\.\\d+(?:[eE][+\\-]?\\d*)?i?\\b",e:hljs.IMMEDIATE_RE,r:1},{cN:"keyword",b:"(?:tryCatch|library|setGeneric|setGroupGeneric)\\b",e:hljs.IMMEDIATE_RE,r:10},{cN:"keyword",b:"\\.\\.\\.",e:hljs.IMMEDIATE_RE,r:10},{cN:"keyword",b:"\\.\\.\\d+(?![\\w.])",e:hljs.IMMEDIATE_RE,r:10},{cN:"keyword",b:"\\b(?:function)",e:hljs.IMMEDIATE_RE,r:2},{cN:"keyword",b:"(?:if|in|break|next|repeat|else|for|return|switch|while|try|stop|warning|require|attach|detach|source|setMethod|setClass)\\b",e:hljs.IMMEDIATE_RE,r:1},{cN:"literal",b:"(?:NA|NA_integer_|NA_real_|NA_character_|NA_complex_)\\b",e:hljs.IMMEDIATE_RE,r:10},{cN:"literal",b:"(?:NULL|TRUE|FALSE|T|F|Inf|NaN)\\b",e:hljs.IMMEDIATE_RE,r:1},{cN:"identifier",b:"[a-zA-Z.][a-zA-Z0-9._]*\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"operator",b:"<\\-(?!\\s*\\d)",e:hljs.IMMEDIATE_RE,r:2},{cN:"operator",b:"\\->|<\\-",e:hljs.IMMEDIATE_RE,r:1},{cN:"operator",b:"%%|~",e:hljs.IMMEDIATE_RE},{cN:"operator",b:">=|<=|==|!=|\\|\\||&&|=|\\+|\\-|\\*|/|\\^|>|<|!|&|\\||\\$|:",e:hljs.IMMEDIATE_RE,r:0},{cN:"operator",b:"%",e:"%",i:"\\n",r:1},{cN:"identifier",b:"`",e:"`",r:0},{cN:"string",b:'"',e:'"',c:[hljs.BE],r:0},{cN:"string",b:"'",e:"'",c:[hljs.BE],r:0},{cN:"paren",b:"[[({\\])}]",e:hljs.IMMEDIATE_RE,r:0}]}};
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+</head>
+
+<body>
+<h1>Introduction</h1>
+
+<p>Since the development of second generation sequencing, the potential to sequence large numbers of individuals has tremendously increased, with, at the same time, a decrease in costs. To analyze the vast amounts of data generated, a wide variety of algorithms and pipelines have been developped for e.g. read mapping and variant calling. However, in disease association studies, the real search only starts after the variant calling. The identification of variant(s) or gene(s) responsible for a (Mendelian or complex) disorder, can pose quite a challenge as variant calling often results in a large amount of variants and ideally, we should be able to reduce this to a very limited number of variants or genes (1?). This package aims to be the link between variant calling and assessing the effect of mutations on protein functionality (by e.g. <a href="http://genetics.bwh.harvard.edu/pph2/">PolyPhen</a> or <a href="http://provean.jcvi.org/index.php">Provean</a>).   </p>
+
+<p>The Mendelian package was designed to identify causal variants for Mendelian disorders, assuming a dominant or recessive mode of inheritance and allows for variable degrees of penetrance, detectance and allelic heterogeneity. It can be used to process both the standard Variant Call Format (VCF) and the output from the <a href="http://www.clcbio.com/products/clc-genomics-workbench/">CLC genomics workbench</a>. Filtering variants present in popular database (e.g. dbSNP) is also supported.  </p>
+
+<p>This vignette is divided in three large parts:</p>
+
+<ul>
+<li>Preprocessing</li>
+<li>Variant filtering</li>
+<li>Combining filters</li>
+</ul>
+
+<p>The sequence of functions can also be found in the following graph:
+<img src="C:/Users/UGent/Documents/Mendelian/Figure2.png" alt=""/></p>
+
+<p><em>varfilter</em> is not mentioned as it can be used anytime, with one exception: VCF files should first be processed with <em>VCFfile</em> before <em>varfilter</em> is used.</p>
+
+<h1>Preprocessing</h1>
+
+<p>This package supports two commonly used formats containing sequencing variants:</p>
+
+<ul>
+<li>VCF</li>
+<li>txt output from the CLC genomics workbench</li>
+</ul>
+
+<p>VCF files consist of a header and a variant section. The variant section itself has 8 mandatory columns. More information on VCF files can be found <a href="http://bioinformatics.oxfordjournals.org/content/27/15/2156">here</a>. Output from the CLC genomics workbench consists of a variable amount of columns, depending on the processing steps done inside CLC. As the aim is reducing the number of variants, I personally recommend to export the files after only nonsynonimous variants are retained.</p>
+
+<p>Depending on the filters you wish to use downstream, the CLC files should be preprocessed or not. VCF files however, should always be preprocessed by the function <em>VCFfile</em>. </p>
+
+<h2>VCFfile</h2>
+
+<p><em>VCFfile</em> allows the one by one preprocessing of VCF files. The main goal is the selection of the non-reference variants for a certain individual and reorganising the file to make it compatible with the filter functions. In addition, a filter can be specified, retaining only those variants with e.g. a certain quality score. As VCF files might contain variant information of several individuals, the column name containing variant information of the individual of interest should always be specified. </p>
+
+<p>The &ldquo;test&rdquo; data frame has 21 rows, with row 12 (chr1 1581713) containing 2 non-reference variants. </p>
+
+<pre><code>## Loading required package: stringr
+</code></pre>
+
+<pre><code class="r">library(&quot;Mendelian&quot;)
+</code></pre>
+
+<pre><code>## 
+## Attaching package: &#39;Mendelian&#39;
+## 
+## The following object is masked _by_ &#39;.GlobalEnv&#39;:
+## 
+##     VCFfile
+</code></pre>
+
+<pre><code class="r">  dim(test)
+</code></pre>
+
+<pre><code>## [1] 21 10
+</code></pre>
+
+<pre><code class="r">  str(test)
+</code></pre>
+
+<pre><code>## &#39;data.frame&#39;:    21 obs. of  10 variables:
+##  $ V1 : Factor w/ 24 levels &quot;chr1&quot;,&quot;chr10&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ V2 : int  1563789 1564952 1570039 1575616 1577003 1580738 1581065 1581096 1581558 1581586 ...
+##  $ V3 : Factor w/ 54924 levels &quot;.&quot;,&quot;rs10000250&quot;,..: 47593 4922 1 51334 1 1 1 1 8702 40635 ...
+##  $ V4 : Factor w/ 693 levels &quot;A&quot;,&quot;AAAAAAAAAAAAAAAAAAG&quot;,..: 176 609 367 527 176 527 367 176 176 527 ...
+##  $ V5 : Factor w/ 634 levels &quot;A&quot;,&quot;A,AC&quot;,&quot;A,ACTGCTGCTG&quot;,..: 1 468 152 152 468 1 152 468 468 152 ...
+##  $ V6 : num  946 529 101 1530 119 ...
+##  $ V7 : Factor w/ 80 levels &quot;HARD_TO_VALIDATE&quot;,..: 69 80 31 30 31 80 79 79 31 31 ...
+##  $ V8 : Factor w/ 61487 levels &quot;AB=0.004;AC=1;AF=0.50;AN=2;BaseQRankSum=1.605;DB;DP=480;Dels=0.00;FS=8.451;HRun=0;HaplotypeScore=2.6000;MQ=4.51;MQ0=449;MQRankS&quot;| __truncated__,..: 41114 45274 60986 58527 61394 28728 17694 16338 54678 53041 ...
+##  $ V9 : Factor w/ 1 level &quot;GT:AD:DP:GQ:PL&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ V10: Factor w/ 60111 levels &quot;0/1:1,10:11:6.90:348,0,7&quot;,..: 55487 55182 54866 52753 58960 27959 17315 22508 49617 48313 ...
+</code></pre>
+
+<pre><code class="r">  test[,c(1,2,4,5,9)]
+</code></pre>
+
+<pre><code>##       V1      V2 V4  V5             V9
+## 160 chr1 1563789  C   A GT:AD:DP:GQ:PL
+## 161 chr1 1564952 TG   T GT:AD:DP:GQ:PL
+## 162 chr1 1570039  G   C GT:AD:DP:GQ:PL
+## 163 chr1 1575616  T   C GT:AD:DP:GQ:PL
+## 164 chr1 1577003  C   T GT:AD:DP:GQ:PL
+## 165 chr1 1580738  T   A GT:AD:DP:GQ:PL
+## 166 chr1 1581065  G   C GT:AD:DP:GQ:PL
+## 167 chr1 1581096  C   T GT:AD:DP:GQ:PL
+## 168 chr1 1581558  C   T GT:AD:DP:GQ:PL
+## 169 chr1 1581586  T   C GT:AD:DP:GQ:PL
+## 170 chr1 1581604  G   A GT:AD:DP:GQ:PL
+## 171 chr1 1581713  A C,G GT:AD:DP:GQ:PL
+## 172 chr1 1581759  G   A GT:AD:DP:GQ:PL
+## 173 chr1 1581881  T   C GT:AD:DP:GQ:PL
+## 174 chr1 1582106  T   C GT:AD:DP:GQ:PL
+## 175 chr1 1582202  C   T GT:AD:DP:GQ:PL
+## 176 chr1 1585597  A   G GT:AD:DP:GQ:PL
+## 177 chr1 1585642  G   T GT:AD:DP:GQ:PL
+## 178 chr1 1586752  T   C GT:AD:DP:GQ:PL
+## 179 chr1 1588670  G   A GT:AD:DP:GQ:PL
+## 180 chr1 1588717  G   A GT:AD:DP:GQ:PL
+</code></pre>
+
+<p>With the filter, the number of variants is reduced to 6, with one region (1581713) containing two non-reference variants. After preprocessing without a filter, this
+renders all the variants, but with 22 rows now as region 1581713 contains two non-reference variants.</p>
+
+<pre><code class="r"># test 1: filter = TRUE
+  x &lt;- test
+  sample &lt;- &quot;V10&quot;
+  filter &lt;- TRUE
+  value &lt;- &quot;PASS&quot;
+  VCFfile(x,sample, filter, value)
+</code></pre>
+
+<pre><code>##      Chromosome  Region Allele     Zygosity
+## 160        chr1 1563789      A   Homozygous
+## 171        chr1 1581713      C Heterozygous
+## 1711       chr1 1581713      G Heterozygous
+## 176        chr1 1585597      G   Homozygous
+## 177        chr1 1585642      T   Homozygous
+## 178        chr1 1586752      C   Homozygous
+</code></pre>
+
+<pre><code class="r"># test 2: filter= FALSE
+  x &lt;- test
+  sample &lt;- &quot;V10&quot;
+  filter &lt;- FALSE
+  VCFfile(x,sample, filter)
+</code></pre>
+
+<pre><code>##      Chromosome  Region Allele     Zygosity
+## 160        chr1 1563789      A   Homozygous
+## 161        chr1 1564952      T   Homozygous
+## 162        chr1 1570039      C   Homozygous
+## 163        chr1 1575616      C   Homozygous
+## 164        chr1 1577003      T   Homozygous
+## 165        chr1 1580738      A Heterozygous
+## 166        chr1 1581065      C Heterozygous
+## 167        chr1 1581096      T Heterozygous
+## 168        chr1 1581558      T   Homozygous
+## 169        chr1 1581586      C   Homozygous
+## 170        chr1 1581604      A Heterozygous
+## 171        chr1 1581713      C Heterozygous
+## 1711       chr1 1581713      G Heterozygous
+## 172        chr1 1581759      A Heterozygous
+## 173        chr1 1581881      C Heterozygous
+## 174        chr1 1582106      C   Homozygous
+## 175        chr1 1582202      T Heterozygous
+## 176        chr1 1585597      G   Homozygous
+## 177        chr1 1585642      T   Homozygous
+## 178        chr1 1586752      C   Homozygous
+## 179        chr1 1588670      A Heterozygous
+## 180        chr1 1588717      A Heterozygous
+</code></pre>
+
+<h2>CLCfile</h2>
+
+<p><em>CLCfile</em> allows the one by one preprocessing of output from the CLC genomics workbench. I personally recommend to export only after filtering for nonsynonymous variants has been done, as this 1) reduces the number of variants 2) adds a functional unit (e.g. a gene) that can be used for filtering with gDom and gRec. </p>
+
+<p>!! IMPORTANT: the function CLCfile should NOT be used prior to nDom and nRec !!</p>
+
+<pre><code class="r">str(CLCfile1)
+</code></pre>
+
+<pre><code>## &#39;data.frame&#39;:    8 obs. of  21 variables:
+##  $ Chromosome                 : chr  &quot;chr1&quot; &quot;chr1&quot; &quot;chr1&quot; &quot;chr1&quot; ...
+##  $ Region                     : chr  &quot;266523&quot; &quot;363618&quot; &quot;604894&quot; &quot;699873&quot; ...
+##  $ Type                       : chr  &quot;SNV&quot; &quot;SNV&quot; &quot;SNV&quot; &quot;SNV&quot; ...
+##  $ Reference                  : chr  &quot;G&quot; &quot;A&quot; &quot;A&quot; &quot;G&quot; ...
+##  $ Allele                     : chr  &quot;T&quot; &quot;G&quot; &quot;G&quot; &quot;A&quot; ...
+##  $ Reference.allele           : chr  &quot;No&quot; &quot;No&quot; &quot;No&quot; &quot;No&quot; ...
+##  $ Length                     : int  1 1 1 1 1 1 1 3
+##  $ Linkage                    : logi  NA NA NA NA NA NA ...
+##  $ Zygosity                   : chr  &quot;Heterozygous&quot; &quot;Heterozygous&quot; &quot;Homozygous&quot; &quot;Homozygous&quot; ...
+##  $ Count                      : int  12 27 212 21 23 15 22 5
+##  $ Coverage                   : int  24 52 212 21 23 61 62 5
+##  $ Frequency                  : num  50 51.9 100 100 100 ...
+##  $ Probability                : num  1 1 1 1 1 1 1 1
+##  $ Forward.read.count         : int  8 27 134 17 23 7 5 1
+##  $ Reverse.read.count         : int  5 3 87 7 2 9 17 4
+##  $ Forward.reverse.balance    : num  0.385 0.1 0.394 0.292 0.08 0.438 0.227 0.2
+##  $ Average.quality            : num  38 36.1 36.2 35.1 33 ...
+##  $ Coding.region.change       : chr  &quot;ENSCAFT00000000001:c.1802C&gt;A&quot; &quot;ENSCAFT00000000003:c.12A&gt;G&quot; &quot;ENSCAFT00000000008:c.775T&gt;C&quot; &quot;ENSCAFT00000037436:c.371C&gt;T&quot; ...
+##  $ Amino.acid.change          : chr  &quot;ENSCAFT00000000001:p.Pro601His&quot; &quot;ENSCAFT00000000003:p.Ile4Met&quot; &quot;ENSCAFT00000000008:p.Phe259Leu&quot; &quot;ENSCAFT00000037436:p.Ala124Val&quot; ...
+##  $ Other.variants.within.codon: chr  &quot;No&quot; &quot;No&quot; &quot;No&quot; &quot;No&quot; ...
+##  $ Non.synonymous             : chr  &quot;Yes&quot; &quot;Yes&quot; &quot;Yes&quot; &quot;Yes&quot; ...
+</code></pre>
+
+<p>All three objects contain 21 columns and 8 or 9 rows. Each row has columns specifying the chromosome, position (&ldquo;region&rdquo;) and associated variant (&ldquo;allele&rdquo;) found. </p>
+
+<p>As we might expect, one variant might be associated with more than one functional unit. This is demonstrated at line 7 in CLCfile1 where the variant causes an amino-acid change in both ENSCAFT00000043665 and ENSCAFT00000048679:</p>
+
+<pre><code class="r">CLCfile1[7,19]
+</code></pre>
+
+<pre><code>## [1] &quot;ENSCAFT00000043665:p.[Arg194Gln]; ENSCAFT00000048679:p.[Ser57Leu]&quot;
+</code></pre>
+
+<p>If preprocessing is not done with the CLCfile function, this will be an issue later on in gDom and gRec as only the first functional unit will be kept for filtering. The difference between specifying multiple as TRUE and FALSE is demonstrated in the following two examples: </p>
+
+<pre><code class="r">diff &lt;- CLCfile1[7,]
+# example 1
+CLCfile1proc &lt;-CLCfile(diff, &quot;Coding.region.change&quot;, TRUE, &quot;; &quot;)
+nrow(CLCfile1proc)
+</code></pre>
+
+<pre><code>## [1] 2
+</code></pre>
+
+<pre><code class="r">CLCfile1proc
+</code></pre>
+
+<pre><code>##      Chromosome   Region Type Reference Allele Reference.allele Length
+## 23         chr1 13397669  SNV         C      T               No      1
+## 23.1       chr1 13397669  SNV         C      T               No      1
+##      Linkage     Zygosity Count Coverage Frequency Probability
+## 23        NA Heterozygous    22       62    35.484           1
+## 23.1      NA Heterozygous    22       62    35.484           1
+##      Forward.read.count Reverse.read.count Forward.reverse.balance
+## 23                    5                 17                   0.227
+## 23.1                  5                 17                   0.227
+##      Average.quality
+## 23            34.591
+## 23.1          34.591
+##                                              Coding.region.change
+## 23   ENSCAFT00000043665:c.[581G&gt;A]; ENSCAFT00000048679:c.[170C&gt;T]
+## 23.1 ENSCAFT00000043665:c.[581G&gt;A]; ENSCAFT00000048679:c.[170C&gt;T]
+##                                                      Amino.acid.change
+## 23   ENSCAFT00000043665:p.[Arg194Gln]; ENSCAFT00000048679:p.[Ser57Leu]
+## 23.1 ENSCAFT00000043665:p.[Arg194Gln]; ENSCAFT00000048679:p.[Ser57Leu]
+##      Other.variants.within.codon Non.synonymous              group
+## 23                           Yes            Yes ENSCAFT00000043665
+## 23.1                         Yes            Yes ENSCAFT00000048679
+</code></pre>
+
+<pre><code class="r"># example 2
+CLCfile1proc &lt;-CLCfile(diff, &quot;Coding.region.change&quot;, FALSE)
+nrow(CLCfile1proc)
+</code></pre>
+
+<pre><code>## [1] 1
+</code></pre>
+
+<pre><code class="r">CLCfile1proc
+</code></pre>
+
+<pre><code>##    Chromosome   Region Type Reference Allele Reference.allele Length
+## 23       chr1 13397669  SNV         C      T               No      1
+##    Linkage     Zygosity Count Coverage Frequency Probability
+## 23      NA Heterozygous    22       62    35.484           1
+##    Forward.read.count Reverse.read.count Forward.reverse.balance
+## 23                  5                 17                   0.227
+##    Average.quality
+## 23          34.591
+##                                            Coding.region.change
+## 23 ENSCAFT00000043665:c.[581G&gt;A]; ENSCAFT00000048679:c.[170C&gt;T]
+##                                                    Amino.acid.change
+## 23 ENSCAFT00000043665:p.[Arg194Gln]; ENSCAFT00000048679:p.[Ser57Leu]
+##    Other.variants.within.codon Non.synonymous              group
+## 23                         Yes            Yes ENSCAFT00000043665
+</code></pre>
+
+<p>As clearly demonstrated, the first example results in 2 rows, each containing one functional unit. The second example only retains the first gene, ENSCAFT00000043665.</p>
+
+<p>In the previous example, the column &ldquo;Coding.region.change&rdquo; was used as the reference column containing the functional unit. However, a different column (&ldquo;Amino.acid.change&rdquo;) can also be used. Both columns are default output from the CLC Genomics Workbench if a check for nonsynonimous variants is done. Chosing a different column (&ldquo;Amino.acid.change&rdquo; instead of &ldquo;Coding.region.change&rdquo;), should give the same result after processing:</p>
+
+<pre><code class="r">diff &lt;- CLCfile1[7,]
+# example 1
+CLCfile1proc &lt;-CLCfile(diff, &quot;Coding.region.change&quot;, TRUE, &quot;; &quot;)
+nrow(CLCfile1proc)
+</code></pre>
+
+<pre><code>## [1] 2
+</code></pre>
+
+<pre><code class="r">CLCfile1proc[,c(1,18,19)]
+</code></pre>
+
+<pre><code>##      Chromosome
+## 23         chr1
+## 23.1       chr1
+##                                              Coding.region.change
+## 23   ENSCAFT00000043665:c.[581G&gt;A]; ENSCAFT00000048679:c.[170C&gt;T]
+## 23.1 ENSCAFT00000043665:c.[581G&gt;A]; ENSCAFT00000048679:c.[170C&gt;T]
+##                                                      Amino.acid.change
+## 23   ENSCAFT00000043665:p.[Arg194Gln]; ENSCAFT00000048679:p.[Ser57Leu]
+## 23.1 ENSCAFT00000043665:p.[Arg194Gln]; ENSCAFT00000048679:p.[Ser57Leu]
+</code></pre>
+
+<pre><code class="r"># example 2
+CLCfile1proc &lt;-CLCfile(diff, &quot;Amino.acid.change&quot;, TRUE, &quot;; &quot;)
+nrow(CLCfile1proc)
+</code></pre>
+
+<pre><code>## [1] 2
+</code></pre>
+
+<pre><code class="r">CLCfile1proc[,c(1,18,19)]
+</code></pre>
+
+<pre><code>##      Chromosome
+## 23         chr1
+## 23.1       chr1
+##                                              Coding.region.change
+## 23   ENSCAFT00000043665:c.[581G&gt;A]; ENSCAFT00000048679:c.[170C&gt;T]
+## 23.1 ENSCAFT00000043665:c.[581G&gt;A]; ENSCAFT00000048679:c.[170C&gt;T]
+##                                                      Amino.acid.change
+## 23   ENSCAFT00000043665:p.[Arg194Gln]; ENSCAFT00000048679:p.[Ser57Leu]
+## 23.1 ENSCAFT00000043665:p.[Arg194Gln]; ENSCAFT00000048679:p.[Ser57Leu]
+</code></pre>
+
+<h2>annot</h2>
+
+<p>The <em>annot</em> function can be used to annotate VCF files preprocessed by <em>VCFfile</em>. 
+Output from the CLC genomics workbench that is not annotated, should be processed immediately by this function instead of using the CLCfile function. Again, please note that both annot and CLCfile should not be used BEFORE nDom and nRec are used. </p>
+
+<p>Using <em>annot</em> on CLCfile1 yields the following result:</p>
+
+<pre><code class="r"># produces an annotated CLC file with all variants retained.
+AnnotCLCfile1 &lt;- annot(CLCfile1, genBED, type=&quot;BED&quot;, nomatch=TRUE, CLC=TRUE)
+nrow(AnnotCLCfile1)
+</code></pre>
+
+<pre><code>## [1] 10
+</code></pre>
+
+<pre><code class="r">nrow(CLCfile1)
+</code></pre>
+
+<pre><code>## [1] 8
+</code></pre>
+
+<pre><code class="r">AnnotCLCfile1[,c(1,2,18,22)]
+</code></pre>
+
+<pre><code>##      Chromosome             Region
+## 1          chr1             266523
+## 2          chr1             363618
+## 3          chr1             604894
+## 4          chr1             699873
+## 5          chr1      758487^758488
+## 22         chr1           13397637
+## 22.1       chr1           13397637
+## 23         chr1           13397669
+## 23.1       chr1           13397669
+## 48         chr1 16806440..16806442
+##                                              Coding.region.change
+## 1                                    ENSCAFT00000000001:c.1802C&gt;A
+## 2                                      ENSCAFT00000000003:c.12A&gt;G
+## 3                                     ENSCAFT00000000008:c.775T&gt;C
+## 4                                     ENSCAFT00000037436:c.371C&gt;T
+## 5                                  ENSCAFT00000000011:c.74_75insG
+## 22   ENSCAFT00000043665:c.[613A&gt;T]; ENSCAFT00000048679:c.[138T&gt;A]
+## 22.1 ENSCAFT00000043665:c.[613A&gt;T]; ENSCAFT00000048679:c.[138T&gt;A]
+## 23   ENSCAFT00000043665:c.[581G&gt;A]; ENSCAFT00000048679:c.[170C&gt;T]
+## 23.1 ENSCAFT00000043665:c.[581G&gt;A]; ENSCAFT00000048679:c.[170C&gt;T]
+## 48                             ENSCAFT00000000149:c.565_567delGAG
+##              annotation
+## 1    ENSCAFT00000000001
+## 2    ENSCAFT00000000003
+## 3    ENSCAFT00000000008
+## 4    ENSCAFT00000037436
+## 5    ENSCAFT00000000011
+## 22   ENSCAFT00000043665
+## 22.1 ENSCAFT00000048679
+## 23   ENSCAFT00000043665
+## 23.1 ENSCAFT00000048679
+## 48   ENSCAFT00000000149
+</code></pre>
+
+<pre><code class="r">CLCfile1[,c(1,2,18)]
+</code></pre>
+
+<pre><code>##    Chromosome             Region
+## 1        chr1             266523
+## 2        chr1             363618
+## 3        chr1             604894
+## 4        chr1             699873
+## 5        chr1      758487^758488
+## 22       chr1           13397637
+## 23       chr1           13397669
+## 48       chr1 16806440..16806442
+##                                            Coding.region.change
+## 1                                  ENSCAFT00000000001:c.1802C&gt;A
+## 2                                    ENSCAFT00000000003:c.12A&gt;G
+## 3                                   ENSCAFT00000000008:c.775T&gt;C
+## 4                                   ENSCAFT00000037436:c.371C&gt;T
+## 5                                ENSCAFT00000000011:c.74_75insG
+## 22 ENSCAFT00000043665:c.[613A&gt;T]; ENSCAFT00000048679:c.[138T&gt;A]
+## 23 ENSCAFT00000043665:c.[581G&gt;A]; ENSCAFT00000048679:c.[170C&gt;T]
+## 48                           ENSCAFT00000000149:c.565_567delGAG
+</code></pre>
+
+<p>As demonstrated, the annotation column added by <em>annot</em> yields identical results as the columns &ldquo;Coding.region.change&rdquo; or &ldquo;Amino.acid.change&rdquo;. However, this is not necessarily the case. <em>Annot</em> does not take aminoacid changes into account, while both other columns do. It might be that a variant lies within the borders of an additional gene, but has no effect on the aminoacid composition of the protein. This will result in an additional row when <em>annot</em> is used. When comparing &ldquo;Coding.region.change&rdquo; or &ldquo;Amino.acid.change&rdquo; with the result of annot, annot should always result in at least the same number of rows (but might give more).</p>
+
+<p>In addition, although the previous example uses a &ldquo;BED file&rdquo;, a &ldquo;GTF&rdquo; can also be used.</p>
+
+<p>An additional option specifies what should be done with variants that do not lie within any functional units. Nomatch should be TRUE when all variants should be kept, it should be FALSE when only variants within the functional unit should be kept. To demonstrate the effect of both options, we change the region of the first variant. </p>
+
+<pre><code class="r">CLCfile1[1,2]
+</code></pre>
+
+<pre><code>## [1] &quot;266523&quot;
+</code></pre>
+
+<pre><code class="r">a &lt;- CLCfile1
+a[1,2] &lt;- &quot;240000&quot; 
+a[c(1,2),]
+</code></pre>
+
+<pre><code>##   Chromosome Region Type Reference Allele Reference.allele Length Linkage
+## 1       chr1 240000  SNV         G      T               No      1      NA
+## 2       chr1 363618  SNV         A      G               No      1      NA
+##       Zygosity Count Coverage Frequency Probability Forward.read.count
+## 1 Heterozygous    12       24    50.000           1                  8
+## 2 Heterozygous    27       52    51.923           1                 27
+##   Reverse.read.count Forward.reverse.balance Average.quality
+## 1                  5                   0.385          38.000
+## 2                  3                   0.100          36.067
+##           Coding.region.change              Amino.acid.change
+## 1 ENSCAFT00000000001:c.1802C&gt;A ENSCAFT00000000001:p.Pro601His
+## 2   ENSCAFT00000000003:c.12A&gt;G   ENSCAFT00000000003:p.Ile4Met
+##   Other.variants.within.codon Non.synonymous
+## 1                          No            Yes
+## 2                          No            Yes
+</code></pre>
+
+<pre><code class="r"># produces an annotated CLC file with all variants retained.
+
+AnnotCLCfile1 &lt;- annot(a, genBED, type=&quot;BED&quot;, nomatch=TRUE, CLC=TRUE)
+nrow(AnnotCLCfile1)
+</code></pre>
+
+<pre><code>## [1] 10
+</code></pre>
+
+<pre><code class="r">AnnotCLCfile1[c(1:2),]
+</code></pre>
+
+<pre><code>##   Chromosome Region Type Reference Allele Reference.allele Length Linkage
+## 1       chr1 240000  SNV         G      T               No      1      NA
+## 2       chr1 363618  SNV         A      G               No      1      NA
+##       Zygosity Count Coverage Frequency Probability Forward.read.count
+## 1 Heterozygous    12       24    50.000           1                  8
+## 2 Heterozygous    27       52    51.923           1                 27
+##   Reverse.read.count Forward.reverse.balance Average.quality
+## 1                  5                   0.385          38.000
+## 2                  3                   0.100          36.067
+##           Coding.region.change              Amino.acid.change
+## 1 ENSCAFT00000000001:c.1802C&gt;A ENSCAFT00000000001:p.Pro601His
+## 2   ENSCAFT00000000003:c.12A&gt;G   ENSCAFT00000000003:p.Ile4Met
+##   Other.variants.within.codon Non.synonymous         annotation
+## 1                          No            Yes          NOT FOUND
+## 2                          No            Yes ENSCAFT00000000003
+</code></pre>
+
+<pre><code class="r"> # produces an annotated CLC file with only the variants that were allocated
+ # to a gene being retained.
+AnnotCLCfile2 &lt;- annot(a, genBED, type=&quot;BED&quot;, nomatch=FALSE, CLC=TRUE)
+nrow(AnnotCLCfile2)
+</code></pre>
+
+<pre><code>## [1] 9
+</code></pre>
+
+<pre><code class="r">AnnotCLCfile2[c(1:2),]
+</code></pre>
+
+<pre><code>##   Chromosome Region Type Reference Allele Reference.allele Length Linkage
+## 2       chr1 363618  SNV         A      G               No      1      NA
+## 3       chr1 604894  SNV         A      G               No      1      NA
+##       Zygosity Count Coverage Frequency Probability Forward.read.count
+## 2 Heterozygous    27       52    51.923           1                 27
+## 3   Homozygous   212      212   100.000           1                134
+##   Reverse.read.count Forward.reverse.balance Average.quality
+## 2                  3                   0.100          36.067
+## 3                 87                   0.394          36.204
+##          Coding.region.change              Amino.acid.change
+## 2  ENSCAFT00000000003:c.12A&gt;G   ENSCAFT00000000003:p.Ile4Met
+## 3 ENSCAFT00000000008:c.775T&gt;C ENSCAFT00000000008:p.Phe259Leu
+##   Other.variants.within.codon Non.synonymous         annotation
+## 2                          No            Yes ENSCAFT00000000003
+## 3                          No            Yes ENSCAFT00000000008
+</code></pre>
+
+<p>As demonstrated, this results in a difference of one row, due to the removal of the first variant in the second example. If nomatch=TRUE, variants that are not annotated, get the &ldquo;NOT FOUND&rdquo; flag in the annotation column. </p>
+
+<h2>varfilter</h2>
+
+<p><em>varfilter</em> can be used to filter variants using a variant database like dbSNP. This function requires the input of a dbSNP file in a certain format. To make sure that the function works properly, the dbSNP file should be downloaded from the <a href="http://genome.ucsc.edu/cgi-bin/hgTables?command=start">UCSC website</a>, specifying the output format as &ldquo;all fields from selected table&rdquo; in the table browser. Take into consideration that downloading the complete dbSNP database can lead to large datafiles. </p>
+
+<pre><code class="r">  # preprocessing of the test file (VCF format)
+  x &lt;- test
+  sample &lt;- &quot;V10&quot;
+  filter &lt;- TRUE
+  value &lt;- &quot;PASS&quot;
+  vcfvar &lt;-VCFfile(x,sample, filter, value)
+  # results in an object with the following dimensions
+  dim(vcfvar)
+</code></pre>
+
+<pre><code>## [1] 6 4
+</code></pre>
+
+<pre><code class="r">  # the variants to be filtered
+  vcfvar
+</code></pre>
+
+<pre><code>##      Chromosome  Region Allele     Zygosity
+## 160        chr1 1563789      A   Homozygous
+## 171        chr1 1581713      C Heterozygous
+## 1711       chr1 1581713      G Heterozygous
+## 176        chr1 1585597      G   Homozygous
+## 177        chr1 1585642      T   Homozygous
+## 178        chr1 1586752      C   Homozygous
+</code></pre>
+
+<p>Important: before you read in the dbSNP file, you should remove the # in the header (before bin). If this is forgotten, an error will occur when reading in the file.</p>
+
+<pre><code class="r">dim(SNP)
+</code></pre>
+
+<pre><code>## [1] 472  26
+</code></pre>
+
+<p>After preprocessing the vcf file or using the CLC file directly and loading the file containing the databasevariants, the object containing the variants of interest (which is vcfvar in this case) can be filtered:</p>
+
+<pre><code class="r"> x &lt;- vcfvar
+ y &lt;- SNP
+ reference &lt;- &quot;refNCBI&quot;
+ MAF &lt;- 0.03
+ a &lt;-varfilter(x,y, MAF, reference)
+</code></pre>
+
+<pre><code>## Number of variants for filtering: 526
+## Number of variants with &gt; MAF: 355
+## Number of variants to be filtered: 6
+## Number of variants from x after filtering retained: 1
+</code></pre>
+
+<pre><code class="r"> dim(a)
+</code></pre>
+
+<pre><code>## [1] 1 4
+</code></pre>
+
+<pre><code class="r"> a
+</code></pre>
+
+<pre><code>##      Chromosome  Region Allele     Zygosity
+## 1711       chr1 1581713      G Heterozygous
+</code></pre>
+
+<p>Using a different MAF, the number of variants changes:</p>
+
+<pre><code class="r"> x &lt;- vcfvar
+ y &lt;- SNP
+ reference &lt;- &quot;refNCBI&quot;
+ MAF &lt;- 0.7
+ a &lt;-varfilter(x,y, MAF, reference)
+</code></pre>
+
+<pre><code>## Number of variants for filtering: 526
+## Number of variants with &gt; MAF: 73
+## Number of variants to be filtered: 6
+## Number of variants from x after filtering retained: 5
+</code></pre>
+
+<pre><code class="r"> dim(a)
+</code></pre>
+
+<pre><code>## [1] 5 4
+</code></pre>
+
+<pre><code class="r"> a
+</code></pre>
+
+<pre><code>##      Chromosome  Region Allele     Zygosity
+## 160        chr1 1563789      A   Homozygous
+## 171        chr1 1581713      C Heterozygous
+## 1711       chr1 1581713      G Heterozygous
+## 176        chr1 1585597      G   Homozygous
+## 177        chr1 1585642      T   Homozygous
+</code></pre>
+
+<p>And finally, non-specifying MAF:</p>
+
+<pre><code class="r"> x &lt;- vcfvar
+ y &lt;- SNP
+ reference &lt;- &quot;refNCBI&quot;
+ a &lt;-varfilter(x,y,, reference)
+</code></pre>
+
+<pre><code>## Number of variants for filtering: 526
+## Number of variants to be filtered: 6
+## No variants left from x after filtering
+</code></pre>
+
+<pre><code class="r"> dim(a)
+</code></pre>
+
+<pre><code>## [1] 0 4
+</code></pre>
+
+<pre><code class="r"> a
+</code></pre>
+
+<pre><code>## [1] Chromosome Region     Allele     Zygosity  
+## &lt;0 rows&gt; (or 0-length row.names)
+</code></pre>
+
+<h1>Variant filtering</h1>
+
+<p>This section details on the main functions of the package: the variant filtering using different types of inheritance, penetrance and detectance. It can be broadly divided in two large sections: </p>
+
+<ul>
+<li>nDom and nRec</li>
+<li>gDom and gRec</li>
+</ul>
+
+<p>This division is based on the grouping unit that is required to be identical amongst cases. The first two functions look at the nucleotide level: all cases should have the same nucleotide (except under a reduced penetrance). In the second group of functions, the cases are required to have an identical grouping unit (which is most often the same gene). The second group will always contain at least all the variants from the first group. A more detailed explanation can be found in the next sections. </p>
+
+<p>Before going into detail, a short explanation on penetrance and detectance, as it is used in these 4 functions:</p>
+
+<ul>
+<li>Penetrance: 
+
+<ul>
+<li>mathematical: P(phenotype|genotype)</li>
+<li>words: the probability of seeing a certain phenotype, given genotype</li>
+<li>calculation: the number of cases, divided by the sum of cases and the number of controls with the genotype but without the phenotype</li>
+<li>It answers the question: if you have the mutation, what is the chance of you having the disease as well?</li>
+</ul></li>
+<li>Detectance: 
+
+<ul>
+<li>mathematical: P(genotype|phenotype)</li>
+<li>words: the probability of identifying a certain genotype, given the phenotype</li>
+<li>calculation: the number of cases with the phenotype and the genotype, divided by the total number of cases.</li>
+<li>It answers the question: if you have the disease, what is your genotype?</li>
+</ul></li>
+</ul>
+
+<h2>nDom and nRec</h2>
+
+<p>The first two functions discussed are nDom and nRec. As mentioned earlier, their major difference with the other two functions is the grouping unit. Here, the nucleotide is considered to be the unit of interest. </p>
+
+<p>For nDom, every non-reference variant (homozygous or heterozygous) present in a case can cause a disease. However, for nRec, only homozygous variants are able to cause a disease. This is the basic concept of Mendelian disorders. </p>
+
+<p>If the number of cases is &gt; 1 and assuming 100% detectance, every case is assumed to have the same mutation, albeit homozygous for nRec and homo- or heterozygous for nDom. If the detectance drops however, not every person with a specific phenotype has necessarily the same mutation. It might be that the person is a phenocopy (= the organism&#39;s phenotype matches a phenotype which is determined by genetic factors, but in this case, it is enviromentaly induced) or that allelic heterogeneity (= the phenomenon in which different mutations at the same locus cause a similar phenotype) or locus heterogeneity (= the phenomenon in which mutations at different loci cause a similar phenotype) is present.</p>
+
+<p>Adding controls increases the complexity. Under 100% penetrance, for nDom, every control is assumed to not having the disease causing mutation. This has the nice consequence that, for nDom, every variant in every control can be used for filtering . For nRec, only homozygous variants present in the controls can be used for filtering variants in the cases. If the penetrance drops beneath 100%, this means that some of the controls might have the mutation, but are not sick. There are numerous reasons for a reduced penetrance: age-dependent penetrance (the individual has to be old enough to get the disease, e.g. degenerative myelopathy in the dog), exercise-dependent penetrance (the individual has to be pushed far enough to show the phenotype, e.g. exercise-induced collapse in the dog), &hellip; This makes filtering a lot more difficult and requires the mutation to be present in a sufficient number of controls before it can be used for filtering.</p>
+
+<p>Finally, two family options are available for both nRec and nDom, adding additional assumptions. In both cases, the parent(s) are assumed to be healthy  and the penetrance is assumed to be 100%. In addition, for nDom, the variant is assumed to be heterozygous in the progeny and not present in the parent(s). It is thus a reflection of the de novo mutation rate. For nRec, the variant is assumed to be homozygous in the progeny <strong>and</strong> heterozygous in the parent(s).</p>
+
+<p>Some examples:</p>
+
+<ul>
+<li>nDom vs nRec with 2 cases:</li>
+</ul>
+
+<pre><code class="r"># restarting from the initial CLCfiles:
+CLCfile1[,c(1:5,9)]
+</code></pre>
+
+<pre><code>##    Chromosome             Region      Type Reference Allele     Zygosity
+## 1        chr1             266523       SNV         G      T Heterozygous
+## 2        chr1             363618       SNV         A      G Heterozygous
+## 3        chr1             604894       SNV         A      G   Homozygous
+## 4        chr1             699873       SNV         G      A   Homozygous
+## 5        chr1      758487^758488 Insertion         -      G   Homozygous
+## 22       chr1           13397637       SNV         T      A Heterozygous
+## 23       chr1           13397669       SNV         C      T Heterozygous
+## 48       chr1 16806440..16806442  Deletion       GAG      -   Homozygous
+</code></pre>
+
+<pre><code class="r">CLCfile2[,c(1:5,9)]
+</code></pre>
+
+<pre><code>##    Chromosome        Region      Type Reference Allele     Zygosity
+## 1        chr1        266523       SNV         G      T Heterozygous
+## 2        chr1        604894       SNV         A      G   Homozygous
+## 3        chr1        699873       SNV         G      A   Homozygous
+## 4        chr1 758461^758462 Insertion         -      G   Homozygous
+## 5        chr1        758465       SNV         C      T   Homozygous
+## 21       chr1      13397637       SNV         T      A Heterozygous
+## 22       chr1      13397669       SNV         C      T Heterozygous
+## 48       chr1      16009193       SNV         T      A   Homozygous
+## 50       chr1      17094403       SNV         C      T   Homozygous
+</code></pre>
+
+<pre><code class="r">output &lt;- nDom(c(&quot;CLCfile1&quot;,&quot;CLCfile2&quot;))
+
+Number of cases: 2
+Number of controls: 0 
+Finished case 1 
+Finished case 2 
+Which detectance level is required? 
+level (1): 50% (1/2)
+level (2): 100% (2/2)
+Choose level:2
+
+output
+  Chromosome   Region Allele Number of Samples
+1       chr1 13397637      A                 2
+2       chr1 13397669      T                 2
+3       chr1   266523      T                 2
+4       chr1   604894      G                 2
+5       chr1   699873      A                 2
+
+output &lt;- nRec(c(&quot;CLCfile1&quot;,&quot;CLCfile2&quot;))
+
+Number of cases: 2
+Number of controls: 0 
+Finished case 1 
+Finished case 2 
+Which detectance level is required? 
+level (1): 50% (1/2)
+level (2): 100% (2/2)
+Choose level:2
+
+output
+  Chromosome Region Allele Number of Samples
+1       chr1 604894      G                 2
+2       chr1 699873      A                 2
+</code></pre>
+
+<p>Where nDom retains 5 variants, nRec only retains 2. Under 100% detectance, nDom simply retains every shared variant. nRec retains only shared variants that are also homozygous. </p>
+
+<ul>
+<li>nDom vs nRec for 1 case, 1 control:</li>
+</ul>
+
+<pre><code class="r">output &lt;- nDom(&quot;CLCfile1&quot;, &quot;CLCfile2&quot;  )
+
+Number of cases: 1
+Number of controls: 1
+Finished case 1 
+Finished control 1 
+Which penetrance level is required? 
+level (0): 100% (1/1+0)
+level (1): 50% (1/1+1)
+Choose level:0
+Which detectance level is required? 
+level (1): 100% (1/1)
+Choose level:1
+
+output
+  Chromosome             Region Allele Number of Samples
+1       chr1 16806440..16806442      -                 1
+2       chr1             363618      G                 1
+3       chr1      758487^758488      G                 1
+
+
+output &lt;- nRec(&quot;CLCfile1&quot;, &quot;CLCfile2&quot;)
+
+Number of cases: 1
+Number of controls: 1
+Finished case 1 
+Finished control 1 
+Which penetrance level is required? 
+level (0): 100% (1/1+0)
+level (1): 50% (1/1+1)
+Choose level:0
+Which detectance level is required? 
+level (1): 100% (1/1)
+Choose level:1
+
+output
+  Chromosome             Region Allele Number of Samples
+1       chr1 16806440..16806442      -                 1
+2       chr1      758487^758488      G                 1
+</code></pre>
+
+<p>Where nDom retains 3 variants, nRec only retains 2. nDom removes every variant shared by case(s) and control(s). nRec only removes the variants that are homozygous in the controls. From the variants remaining in the case(s), it returns only the homozygous variants.</p>
+
+<ul>
+<li>The P-F option in nRec and nDom with 1 case, 1 control:</li>
+</ul>
+
+<pre><code class="r">output &lt;- nDom(&quot;CLCfile1&quot;, &quot;CLCfile2&quot;, &quot;P-F&quot;)
+
+Number of cases: 1
+Number of controls: 1
+P-F mode: 1 healthy parent, 1 affected progeny
+Finished case 1 
+Finished control 1 
+
+output
+  Chromosome             Region Allele Number of Samples
+1       chr1 16806440..16806442      -                 1
+
+
+output &lt;- nRec(&quot;CLCfile1&quot;, &quot;CLCfile2&quot;, &quot;P-F&quot;)
+
+Number of cases: 1
+Number of controls: 1
+P-F mode: 1 healthy parent, 1 affected progeny
+Finished case 1 
+Finished control 1 
+No variants retained
+
+output
+NULL
+</code></pre>
+
+<p>nDom now returns only one variant, nRec no variants. nDom requires the variants in the case to be heterozygous after the removal of every single variant found in the control(s). One might argue that demanding the heterozygous state is not completely correct. It is true that two identical de novo mutations at the same place might occur. However, this is highly unlikely. If one wants to make sure that this possibility is taken into account, the nDom can be used but without the family option. For nRec, as no single variant is homozygous in the case (= progeny) AND heterozygous in the control (= parent), no variants are retained.</p>
+
+<p>A wide variation of combinations are possible, especially if reduced penetrance and detectance are taken into account. As detailing every single option would lead us to far, this is omitted. </p>
+
+<h2>gDom and gRec</h2>
+
+<p>The next stop in variant filtering includes the following two functions: gDom and gRec. In this section, the grouping unit is not a nucleotide, but something bigger. This is rather vague as it is user dependent. For example, it might be an exon, a gene or even an entire chromosome. Most often however, it is a gene and this will be used further throughout this section.</p>
+
+<p>For only one case, gDom is similar to nDom: every single variant is a possible disease causing candidate. For gRec however, for a gene to be retained it has to have at least one homozygous variant <strong>or</strong> be compound heterozygous (= the condition of having two heterogeneous recessive alleles at a particular locus that can cause genetic disease in a heterozygous state).</p>
+
+<p>If the number of cases is &gt; 1 and the detectance is 100%, gDom looks for every gene (= grouping unit) that has at least one mutation in every single case. Thus, in contrast with nDom, it does not require the same mutation to be present in every single case. For gRec, it first retains only those genes with at least one homozygous variant or compound heterozygosity. Next, from this reduced list of genes, it retains only those genes present in every single case. Hence, both functions allow for a certain degree of genetic heterogeneity to be present.</p>
+
+<p>Controls can be added to filter the variants in the cases further. Again, we first assume 100% penetrance. For nDom, every variant present in every control can be used to filter the variants in the cases. After these variants have been filtered from the cases, the remaining variants are again grouped per gene and only those genes with at least one variant in every single patient are retained. For nRec, there is a two step filtering with controls. First, every homozygous variant present in every single control is used to filter the variants from the cases. Second, per control, all pairwise combinations from heterozygous variants within each gene are made. These are used to filter all pairwise combinations from variants present in the cases. Next, the same happens as mentioned in the previous paragraph for gRec.</p>
+
+<p>Finally, reduced penetrance and detectance result in the most complex situation. For reduced penetrance, the situation is identical to nRec/nDom: the mutation has to be present sufficiently frequent in the controls before it can be used to filter variants from the cases. With reduced detectance, the level is not the mutation, but the gene (or any other functional unit chosen as defined by the user): the gene has to be sufficiently present in the cases to be retained, but it is not required anymore to be present in every single case.</p>
+
+<p>Some practical examples:</p>
+
+<ul>
+<li>Before filtering, we first preprocess the CLC files. Again, this is only required for gDom and gRec and it should <strong>not</strong> be used prior nDom and nRec.</li>
+</ul>
+
+<pre><code class="r">CLCfile1proc &lt;-CLCfile(CLCfile1, &quot;Coding.region.change&quot;, TRUE, &quot;; &quot;)
+CLCfile2proc &lt;-CLCfile(CLCfile2, &quot;Coding.region.change&quot;, TRUE, &quot;; &quot;)
+CLCfile1proc[,c(1,2,4,5,9,22)]
+</code></pre>
+
+<pre><code>##      Chromosome             Region Reference Allele     Zygosity
+## 1          chr1             266523         G      T Heterozygous
+## 2          chr1             363618         A      G Heterozygous
+## 3          chr1             604894         A      G   Homozygous
+## 4          chr1             699873         G      A   Homozygous
+## 5          chr1      758487^758488         -      G   Homozygous
+## 22         chr1           13397637         T      A Heterozygous
+## 22.1       chr1           13397637         T      A Heterozygous
+## 23         chr1           13397669         C      T Heterozygous
+## 23.1       chr1           13397669         C      T Heterozygous
+## 48         chr1 16806440..16806442       GAG      -   Homozygous
+##                   group
+## 1    ENSCAFT00000000001
+## 2    ENSCAFT00000000003
+## 3    ENSCAFT00000000008
+## 4    ENSCAFT00000037436
+## 5    ENSCAFT00000000011
+## 22   ENSCAFT00000043665
+## 22.1 ENSCAFT00000048679
+## 23   ENSCAFT00000043665
+## 23.1 ENSCAFT00000048679
+## 48   ENSCAFT00000000149
+</code></pre>
+
+<pre><code class="r">CLCfile2proc[,c(1,2,4,5,9,22)]
+</code></pre>
+
+<pre><code>##      Chromosome        Region Reference Allele     Zygosity
+## 1          chr1        266523         G      T Heterozygous
+## 2          chr1        604894         A      G   Homozygous
+## 3          chr1        699873         G      A   Homozygous
+## 4          chr1 758461^758462         -      G   Homozygous
+## 5          chr1        758465         C      T   Homozygous
+## 21         chr1      13397637         T      A Heterozygous
+## 21.1       chr1      13397637         T      A Heterozygous
+## 22         chr1      13397669         C      T Heterozygous
+## 22.1       chr1      13397669         C      T Heterozygous
+## 48         chr1      16009193         T      A   Homozygous
+## 50         chr1      17094403         C      T   Homozygous
+##                   group
+## 1    ENSCAFT00000000001
+## 2    ENSCAFT00000000008
+## 3    ENSCAFT00000037436
+## 4    ENSCAFT00000000011
+## 5    ENSCAFT00000000011
+## 21   ENSCAFT00000043665
+## 21.1 ENSCAFT00000048679
+## 22   ENSCAFT00000043665
+## 22.1 ENSCAFT00000048679
+## 48   ENSCAFT00000000144
+## 50   ENSCAFT00000000160
+</code></pre>
+
+<ul>
+<li>gDom vs gRec with 2 cases:</li>
+</ul>
+
+<pre><code class="r">output &lt;- gDom(c(&quot;CLCfile1proc&quot;,&quot;CLCfile2proc&quot;))
+
+Number of cases: 2
+Finished case 1 
+Finished case 2 
+Which detectance level is required? 
+level (1): 50% (1/2)
+level (2): 100% (2/2)
+Choose level:2
+Number of variants retained: 10
+Number of genes retained: 6
+
+output
+   Chromosome        Region Allele              Group Number of samples
+1        chr1      13397637      A ENSCAFT00000043665                 2
+2        chr1      13397637      A ENSCAFT00000048679                 2
+3        chr1      13397669      T ENSCAFT00000043665                 2
+4        chr1      13397669      T ENSCAFT00000048679                 2
+5        chr1        266523      T ENSCAFT00000000001                 2
+6        chr1        604894      G ENSCAFT00000000008                 2
+7        chr1        699873      A ENSCAFT00000037436                 2
+8        chr1 758461^758462      G ENSCAFT00000000011                 1
+9        chr1        758465      T ENSCAFT00000000011                 1
+10       chr1 758487^758488      G ENSCAFT00000000011                 1
+
+
+output &lt;- gRec(c(&quot;CLCfile1proc&quot;,&quot;CLCfile2proc&quot;))
+
+Number of cases: 2
+Finished case 1 
+Finished case 2 
+Which detectance level is required? 
+level (1): 50% (1/2)
+level (2): 100% (2/2)
+Choose level:2
+Number of variants retained: 9
+Number of genes retained: 5
+
+output
+  Chromosome        Region Allele              Group Number of samples
+1       chr1      13397637      A ENSCAFT00000043665                 2
+2       chr1      13397637      A ENSCAFT00000048679                 2
+3       chr1      13397669      T ENSCAFT00000043665                 2
+4       chr1      13397669      T ENSCAFT00000048679                 2
+5       chr1        604894      G ENSCAFT00000000008                 2
+6       chr1        699873      A ENSCAFT00000037436                 2
+7       chr1 758461^758462      G ENSCAFT00000000011                 1
+8       chr1        758465      T ENSCAFT00000000011                 1
+9       chr1 758487^758488      G ENSCAFT00000000011                 1
+</code></pre>
+
+<p>These functions report both the number of functional units (genes here) and the number of variants retained. Here, gDom retains 10 variants in 6 genes, nRec only retains 9 variants in 5 genes.</p>
+
+<ul>
+<li>gDom vs gRec for 1 case, 1 control:</li>
+</ul>
+
+<pre><code class="r">output &lt;- gDom(&quot;CLCfile1proc&quot;, &quot;CLCfile2proc&quot; )
+
+Number of cases: 1
+Number of controls: 1
+Finished control 1 
+Which penetrance level is required? 
+level (0): 100% (1/1+0)
+level (1): 50% (1/1+1)
+Choose level:0
+Finished case 1 
+Which detectance level is required? 
+level (1): 100% (1/1)
+Choose level:1
+Number of variants retained: 3
+Number of genes retained: 3
+
+output
+  Chromosome             Region Allele              Group Number of samples
+1       chr1 16806440..16806442      - ENSCAFT00000000149                 1
+2       chr1             363618      G ENSCAFT00000000003                 1
+3       chr1      758487^758488      G ENSCAFT00000000011                 1
+
+
+output &lt;- gRec(&quot;CLCfile1proc&quot;, &quot;CLCfile2proc&quot; )
+
+Number of cases: 1
+Number of controls: 1
+Finished control 1 
+Which penetrance level is required? 
+level (0): 100% (1/1+0)
+level (1): 50% (1/1+1)
+Choose level:0
+Finished case 1 
+Which detectance level is required? 
+level (1): 100% (1/1)
+Choose level:1
+Number of variants retained: 2
+Number of genes retained: 2
+
+output
+  Chromosome             Region Allele              Group Number of samples
+1       chr1 16806440..16806442      - ENSCAFT00000000149                 1
+2       chr1      758487^758488      G ENSCAFT00000000011                 1
+</code></pre>
+
+<p>The same function with one control and one case returns 3 variants in 3 genes for gDom and 2 variants and 2 genes for gRec. </p>
+
+<h1>Combining filters</h1>
+
+<p>The final function was designed to further process the output of the four variant filter functions mentioned earlier. It assumes that all objects to be filtered, have the same phenotype (= input is assumed to be cases only, there is no room for controls) and that every object  has a column with an annotation. In addition, for the annotation to be useful, it should be the same for every single object: it does not make sense to group one object at the exon level and another object at the gene level. </p>
+
+<p>A practical example: </p>
+
+<ul>
+<li>first: the preparation steps:</li>
+</ul>
+
+<pre><code class="r">output &lt;- nRec(&quot;CLCfile1&quot;, &quot;CLCfile2&quot;  )
+
+Number of cases: 1
+Number of controls: 1
+Finished case 1 
+Finished control 1 
+Which penetrance level is required? 
+level (0): 100% (1/1+0)
+level (1): 50% (1/1+1)
+Choose level:0
+Which detectance level is required? 
+level (1): 100% (1/1)
+Choose level:1
+
+output
+  Chromosome             Region Allele Number of Samples
+1       chr1 16806440..16806442      -                 1
+2       chr1      758487^758488      G                 1
+
+
+output2 &lt;- gDom(&quot;CLCfile1proc&quot;, &quot;CLCfile2proc&quot;)
+
+Number of cases: 1
+Number of controls: 1
+Finished control 1 
+Which penetrance level is required? 
+level (0): 100% (1/1+0)
+level (1): 50% (1/1+1)
+Choose level:0
+Finished case 1 
+Which detectance level is required? 
+level (1): 100% (1/1)
+Choose level:1
+Number of variants retained: 3
+Number of genes retained: 3
+
+output2
+  Chromosome             Region Allele              Group Number of samples
+1       chr1 16806440..16806442      - ENSCAFT00000000149                 1
+2       chr1             363618      G ENSCAFT00000000003                 1
+3       chr1      758487^758488      G ENSCAFT00000000011                 1
+</code></pre>
+
+<p>We have created output for nRec and gDom now. Before we can continue processing, we have to annotate the output of the nRec function first:</p>
+
+<pre><code class="r">Annotoutput2 &lt;- annot(output,genBED, type=&quot;BED&quot;, nomatch=FALSE, CLC=TRUE)
+
+Annotoutput2
+  Chromosome             Region Allele Number of Samples         annotation
+1       chr1 16806440..16806442      -                 1 ENSCAFT00000000149
+2       chr1      758487^758488      G                 1 ENSCAFT00000000011
+</code></pre>
+
+<ul>
+<li>Now the objects are processed sufficiently for the <em>commonvar</em> function:</li>
+</ul>
+
+<pre><code class="r">&gt; x &lt;- c(&quot;output2&quot;, &quot;Annotoutput2&quot;)
+&gt; group &lt;- c(&quot;Group&quot;, &quot;annotation&quot;)
+&gt; a &lt;-commonvar(x,group)
+Which detectance level is required? 
+level (1): 50% (1/2)
+level (2): 100% (2/2)
+Choose level:2
+2 groups are retained 
+&gt; a 
+  Chromosome             Region Allele              Group Freq
+1       chr1 16806440..16806442      - ENSCAFT00000000149    2
+2       chr1      758487^758488      G ENSCAFT00000000011    2
+</code></pre>
+
+<p>Some important remarks:</p>
+
+<ul>
+<li>zygosity is <strong>not</strong> important in this function: it assumes that that has been taken care of in the functions used before the <em>commonvar</em> function</li>
+<li>penetrance is not considered here as only cases are included in this function</li>
+<li>the detectance level is variable and works at the &ldquo;functional unit&rdquo; level (which is gene in this case).</li>
+</ul>
+
+<h1>X-linked disorders</h1>
+
+<p>Altough not directly intented for this purpose, these functions can be used in specific cases when X-linked inheritance is expected:</p>
+
+<ul>
+<li>gDom: can be used every time an X-linked dominant inheritance is expected.</li>
+<li>nDom: idem, except for the the <em>family</em> option as with this option, the function expects the cases to be heterozygous and this is essentially only met when the case is female. If however the zygosity for a male case is heterozygous as well (by changing this manually or this might also be default depending on the program), the <em>family</em> option can be used as well for male cases. </li>
+<li>nRec and gRec are more difficult as they make more assumptions towards zygosity. They can be safely used when all individuals (cases and if present, controls) are female. When males are included, two situations might occur:
+
+<ul>
+<li>The case is male: 
+
+<ul>
+<li>for nRec: mutations causing disease are assumed to be homozygous. As every single mutation can cause the disease in a male individual, changing the zygosity for every variant to homozygous (manually or this might also be default depending on the program), ensures this assumption to be met and a correct use of the function</li>
+<li>for gRec: this is currently not supported. </li>
+</ul></li>
+<li>A control is male:
+
+<ul>
+<li>for nRec: this assumes again that only homozygous mutations can cause a disease. An identical operation as under nRec should solve this situtation: change the zygosity for the male control to homozygous for every single variant.<br/></li>
+<li>for gRec: this is currently not supported.</li>
+</ul></li>
+</ul></li>
+</ul>
+
+<p>In conclusion, the functions presented here can be used in almost every X-linked disorder, if the appropriate adjustments are made at the zygosity level for male individuals. </p>
+
+<h1>Overview of variant filters:</h1>
+
+<table><thead>
+<tr>
+<th align="center">filter</th>
+<th align="center">variant to be retained when shared by cases</th>
+<th align="center">variants in controls that will be used for filtering in cases</th>
+</tr>
+</thead><tbody>
+<tr>
+<td align="center">nDom</td>
+<td align="center">every variant</td>
+<td align="center">every variant</td>
+</tr>
+<tr>
+<td align="center">nRec</td>
+<td align="center">homozygous variants</td>
+<td align="center">homozygous variants</td>
+</tr>
+<tr>
+<td align="center">gDom</td>
+<td align="center">every gene with at least one variant</td>
+<td align="center">every variant</td>
+</tr>
+<tr>
+<td align="center">gRec</td>
+<td align="center">gene with at least one homozygous variant or at least once compound heterozygous</td>
+<td align="center">homozygous variants and/or pairwise combination of heterozgyous variants within each gene</td>
+</tr>
+</tbody></table>
+
+<h1>Flowcharts</h1>
+
+<h2>CLC file</h2>
+
+<p><img src="C:/Users/UGent/Documents/Mendelian/Figure3clc.png" alt=""/></p>
+
+<p>Remark: <em>annot</em> or <em>CLCfile</em> should be used between <em>nRec/nDom</em> and <em>commonvar</em></p>
+
+<h2>VCF file</h2>
+
+<p><img src="C:/Users/UGent/Documents/Mendelian/Figure4vcf.png" alt=""/></p>
+
+<p>Remark: <em>annot</em> or <em>CLCfile</em> should be used between <em>nRec/nDom</em> and <em>commonvar</em></p>
+
+</body>
+
+</html>
+

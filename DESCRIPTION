@@ -1,0 +1,19 @@
+Package: Mendelian
+Title: Variant analysis for Autosomal Mendelian disorders
+Version: 0.1
+Authors@R: person("Broeckx", "Bart", email= "bart.broeckx@ugent.be",
+    role=c("aut","cre"))
+Description: This package allows the processing of genomic variants for
+    autosomal Mendelian disorders (both recessive and dominant) for both human
+    and other species. Input files can be VCF files and tables generated in
+    CLC Genomics Workbench. Various filters can be applied, including reduced
+    penetrance and detectance.
+Depends:
+    R (>= 3.1.0)
+License: GPL-2
+LazyData: true
+Imports:
+    stringr
+Suggests:
+    knitr
+VignetteBuilder: knitr

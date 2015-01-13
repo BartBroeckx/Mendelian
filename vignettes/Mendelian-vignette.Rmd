@@ -1,0 +1,1407 @@
+---
+title: "Mendelian vignette"
+author: "Bart Broeckx"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Mendelian-vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\usepackage[utf8]{inputenc}
+---
+# Introduction
+
+Since the development of second generation sequencing, the potential to sequence large numbers of individuals has tremendously increased, with, at the same time, a decrease in costs. To analyze the vast amounts of data generated, a wide variety of algorithms and pipelines have been developped for e.g. read mapping and variant calling. However, in disease association studies, the real search only starts after the variant calling. The identification of variant(s) or gene(s) responsible for a (Mendelian or complex) disorder, can pose quite a challenge as variant calling often results in a large amount of variants and ideally, we should be able to reduce this to a very limited number of variants or genes (1?). This package aims to be the link between variant calling and assessing the effect of mutations on protein functionality (by e.g. [PolyPhen](http://genetics.bwh.harvard.edu/pph2/) or [Provean](http://provean.jcvi.org/index.php)).   
+
+The Mendelian package was designed to identify causal variants for Mendelian disorders, assuming a dominant or recessive mode of inheritance and allows for variable degrees of penetrance, detectance and allelic heterogeneity. It can be used to process both the standard Variant Call Format (VCF) and the output from the [CLC genomics workbench] (http://www.clcbio.com/products/clc-genomics-workbench/). Filtering variants present in popular database (e.g. dbSNP) is also supported.  
+
+This vignette is divided in three large parts:
+* Preprocessing
+* Variant filtering
+* Combining filters
+
+The sequence of functions can also be found in the following graph:
+![](C:/Users/UGent/Documents/Mendelian/Figure2.png)
+
+*varfilter* is not mentioned as it can be used anytime, with one exception: VCF files should first be processed with *VCFfile* before *varfilter* is used.
+
+# Preprocessing
+This package supports two commonly used formats containing sequencing variants:
+* VCF
+* txt output from the CLC genomics workbench
+
+VCF files consist of a header and a variant section. The variant section itself has 8 mandatory columns. More information on VCF files can be found [here] (http://bioinformatics.oxfordjournals.org/content/27/15/2156). Output from the CLC genomics workbench consists of a variable amount of columns, depending on the processing steps done inside CLC. As the aim is reducing the number of variants, I personally recommend to export the files after only nonsynonimous variants are retained.
+
+Depending on the filters you wish to use downstream, the CLC files should be preprocessed or not. VCF files however, should always be preprocessed by the function *VCFfile*. 
+
+## VCFfile
+*VCFfile* allows the one by one preprocessing of VCF files. The main goal is the selection of the non-reference variants for a certain individual and reorganising the file to make it compatible with the filter functions. In addition, a filter can be specified, retaining only those variants with e.g. a certain quality score. As VCF files might contain variant information of several individuals, the column name containing variant information of the individual of interest should always be specified. 
+
+The "test" data frame has 21 rows, with row 12 (chr1 1581713) containing 2 non-reference variants. 
+```{r, echo=FALSE}
+require(stringr)  
+VCFfile <-function(x,sample,filter,value){ 
+  id <- which(is.na(x[, sample]))
+  if (length(id) >=1) {
+    x <- x[-id,]
+  } 
+  if(filter == TRUE){
+    if(!missing(value)){
+      id <- which(x[,7] == value)
+      x <-x[id,]
+    }
+  }
+  # standard fields
+  y <- x[,c(1,2,5,9)]
+  # add the field containing the sample
+  x <- x[,sample]
+  x <- cbind(y,x)
+  # start reformatting
+  output = NULL
+  for(i in 1:nrow(x)){
+    var <- x[i,]
+    format <-unlist(strsplit(as.character(var[,4]), ":"))
+    id <-which(format == "GT")
+    variant <-unlist(strsplit(as.character(var[,"x"]), ":"))
+    variant <- variant[id]
+    splitvariants <-unlist(strsplit(variant, "/"))
+    variant1 <- as.numeric(splitvariants[1])
+    variant2 <- as.numeric(splitvariants[2])
+    Zygosity<- ifelse(variant1 == variant2,"Homozygous", "Heterozygous")
+    allele <-unlist(strsplit(as.character(var[,3]),","))
+    allele1 <- allele[variant1]
+    allele2 <- allele[variant2]
+    
+    final2  <- cbind(var[,c(1:2)], allele2, Zygosity)
+    colnames(final2) <- c("Chromosome", "Region", "Allele", "Zygosity")
+    if (Zygosity == "Homozygous") {
+      end <- final2
+      
+    } else  if (Zygosity == "Heterozygous"){ 
+      if (variant1 != "0") {
+        final1  <-cbind(var[,c(1:2)], allele1, Zygosity)   
+        colnames(final1) <- c("Chromosome", "Region", "Allele", "Zygosity")
+        end <-rbind(final1,final2)
+      } else if (variant1 == "0"){
+        end <- final2
+      }
+    } 
+    
+    
+    output <- rbind(output, end)
+  }
+  output
+}  
+  
+  
+```
+
+```{r}
+library("Mendelian")
+  dim(test)
+  str(test)
+  test[,c(1,2,4,5,9)]
+
+```
+
+
+With the filter, the number of variants is reduced to 6, with one region (1581713) containing two non-reference variants. After preprocessing without a filter, this
+renders all the variants, but with 22 rows now as region 1581713 contains two non-reference variants.
+```{r}
+# test 1: filter = TRUE
+  x <- test
+  sample <- "V10"
+  filter <- TRUE
+  value <- "PASS"
+  VCFfile(x,sample, filter, value)
+# test 2: filter= FALSE
+  x <- test
+  sample <- "V10"
+  filter <- FALSE
+  VCFfile(x,sample, filter)
+```
+
+## CLCfile
+*CLCfile* allows the one by one preprocessing of output from the CLC genomics workbench. I personally recommend to export only after filtering for nonsynonymous variants has been done, as this 1) reduces the number of variants 2) adds a functional unit (e.g. a gene) that can be used for filtering with gDom and gRec. 
+
+!! IMPORTANT: the function CLCfile should NOT be used prior to nDom and nRec !!
+
+```{r}
+str(CLCfile1)
+```
+All three objects contain 21 columns and 8 or 9 rows. Each row has columns specifying the chromosome, position ("region") and associated variant ("allele") found. 
+
+```{r, echo=FALSE}
+CLCfile <- function(x,y, multiple,split)
+{ # splitting up lines  
+  if (!missing(multiple)) {
+    if (multiple == "TRUE") {
+      if (!missing(split)) {
+        group <-x[,y]  
+        group <-unlist(strsplit(group, split))
+        repeats  <- 1+str_count(x[,y], split)
+        x <-x[rep(seq_len(nrow(x)),repeats),]
+        group <-gsub(":.*", "", group)
+        output <-cbind(x,group)
+      }
+    }
+  }
+  # without split 
+  if (missing(multiple) | multiple == "FALSE") {
+    group <-x[,y]
+    group <-gsub(":.*", "", group)
+    output<-cbind(x,group)
+  }
+  output
+}
+```
+As we might expect, one variant might be associated with more than one functional unit. This is demonstrated at line 7 in CLCfile1 where the variant causes an amino-acid change in both ENSCAFT00000043665 and ENSCAFT00000048679:
+
+```{r}
+CLCfile1[7,19]
+```
+If preprocessing is not done with the CLCfile function, this will be an issue later on in gDom and gRec as only the first functional unit will be kept for filtering. The difference between specifying multiple as TRUE and FALSE is demonstrated in the following two examples: 
+
+```{r}
+diff <- CLCfile1[7,]
+# example 1
+CLCfile1proc <-CLCfile(diff, "Coding.region.change", TRUE, "; ")
+nrow(CLCfile1proc)
+CLCfile1proc
+# example 2
+CLCfile1proc <-CLCfile(diff, "Coding.region.change", FALSE)
+nrow(CLCfile1proc)
+CLCfile1proc
+```
+As clearly demonstrated, the first example results in 2 rows, each containing one functional unit. The second example only retains the first gene, ENSCAFT00000043665.
+
+In the previous example, the column "Coding.region.change" was used as the reference column containing the functional unit. However, a different column ("Amino.acid.change") can also be used. Both columns are default output from the CLC Genomics Workbench if a check for nonsynonimous variants is done. Chosing a different column ("Amino.acid.change" instead of "Coding.region.change"), should give the same result after processing:
+```{r}
+diff <- CLCfile1[7,]
+# example 1
+CLCfile1proc <-CLCfile(diff, "Coding.region.change", TRUE, "; ")
+nrow(CLCfile1proc)
+CLCfile1proc[,c(1,18,19)]
+# example 2
+CLCfile1proc <-CLCfile(diff, "Amino.acid.change", TRUE, "; ")
+nrow(CLCfile1proc)
+CLCfile1proc[,c(1,18,19)]
+
+```
+
+## annot
+The *annot* function can be used to annotate VCF files preprocessed by *VCFfile*. 
+Output from the CLC genomics workbench that is not annotated, should be processed immediately by this function instead of using the CLCfile function. Again, please note that both annot and CLCfile should not be used BEFORE nDom and nRec are used. 
+
+Using *annot* on CLCfile1 yields the following result:
+
+```{r, echo=FALSE}
+annot <- function(x, y, type, nomatch, CLC){
+  if (missing(x) | missing(y) | missing(type)){
+    stop("specify x, y and type")
+  } else {
+    if  (CLC == TRUE){
+      
+      idregion <-grep("[:^:]", x$Region)
+      if (length(idregion) >=1){
+        originalregion <- x[idregion,"Region"]
+        x$Region <- gsub("[:^:].*", "", x$Region)  
+      }
+      
+      idregion2 <- grep("[:..:]", x$Region)
+      if (length(idregion2) >=1){
+        originalregion2 <- x[idregion2, "Region"]
+        x$Region <- gsub("[:..:].*", "", x$Region)
+        
+      }
+      
+    }
+    x[,1]<-as.factor(x[,1])
+    x[,2]<- as.numeric(x[,2])
+    
+    
+    if (type == "BED") {
+      y[,2]<- y[,2] + 1 
+    }
+    
+    output <- data.frame()
+    for (i in 1:nrow(x)){
+      linei <- x[i,]
+      id <- which(linei[,1] == y[,1])
+      subset <- y[id,]
+      if (type == "BED") {
+        id <- which(linei[,2] >= subset[,2] & linei[,2] <= subset[,3]) 
+        if  (CLC == TRUE){
+          if (length(idregion) >=1 | length(idregion2) >=1 ){
+            for (f in 1:length(idregion)){
+              if (i == idregion[f]){ 
+                linei[,2]<-originalregion[f]
+                
+              }  
+            }
+            for (g in 1:length(idregion2)){
+              if (i == idregion2[g]){ 
+                linei[,2]<-originalregion2[g]
+                
+              }  
+            }
+          }
+        }
+        if (length(id>0)){
+          annotation<-as.vector(unlist(subset[id, 4]))
+          nrep <- length(annotation)  
+          replicated<- linei[rep(linei[,1],nrep),]
+          result <-cbind(replicated, annotation)
+          
+          output <-rbind(output, result)
+        } else {
+          if (nomatch == "TRUE"){
+            annotation  <- "NOT FOUND"
+            result <- cbind(linei, annotation)
+            output <-rbind(output, result)
+          } 
+        }
+      } else if (type== "GTF"){
+        id <- which(linei[,2] >= subset[,4] & linei[,2] <= subset[,5]) 
+        if  (CLC == TRUE){
+          if (length(idregion) >=1 | length(idregion2) >=1 ){
+            for (f in 1:length(idregion)){
+              if (i == idregion[f]){ 
+                linei[,2]<-originalregion[f]
+                
+              }  
+            }
+            for (g in 1:length(idregion2)){
+              if (i == idregion2[g]){ 
+                linei[,2]<-originalregion2[g]
+                
+              }  
+            }
+          }        
+        }
+        if (length(id>0)){
+          annotation<-as.vector(unlist(subset[id, 10]))
+          nrep <- length(annotation)  
+          replicated<- linei[rep(linei[,1],nrep),]
+          result <-cbind(replicated, annotation)
+        } else {
+          if (nomatch == "TRUE"){
+            annotation  <- "NOT FOUND"
+            result <- cbind(linei, annotation)
+            output <-rbind(output, result)
+          } 
+        }
+      }
+      
+    }
+    
+  }
+  
+  output
+}
+
+```
+
+```{r}
+# produces an annotated CLC file with all variants retained.
+AnnotCLCfile1 <- annot(CLCfile1, genBED, type="BED", nomatch=TRUE, CLC=TRUE)
+nrow(AnnotCLCfile1)
+nrow(CLCfile1)
+AnnotCLCfile1[,c(1,2,18,22)]
+CLCfile1[,c(1,2,18)]
+
+```
+
+As demonstrated, the annotation column added by *annot* yields identical results as the columns "Coding.region.change" or "Amino.acid.change". However, this is not necessarily the case. *Annot* does not take aminoacid changes into account, while both other columns do. It might be that a variant lies within the borders of an additional gene, but has no effect on the aminoacid composition of the protein. This will result in an additional row when *annot* is used. When comparing "Coding.region.change" or "Amino.acid.change" with the result of annot, annot should always result in at least the same number of rows (but might give more).
+
+In addition, although the previous example uses a "BED file", a "GTF" can also be used.
+
+An additional option specifies what should be done with variants that do not lie within any functional units. Nomatch should be TRUE when all variants should be kept, it should be FALSE when only variants within the functional unit should be kept. To demonstrate the effect of both options, we change the region of the first variant. 
+
+```{r}
+CLCfile1[1,2]
+a <- CLCfile1
+a[1,2] <- "240000" 
+a[c(1,2),]
+# produces an annotated CLC file with all variants retained.
+ 
+AnnotCLCfile1 <- annot(a, genBED, type="BED", nomatch=TRUE, CLC=TRUE)
+nrow(AnnotCLCfile1)
+AnnotCLCfile1[c(1:2),]
+ # produces an annotated CLC file with only the variants that were allocated
+ # to a gene being retained.
+AnnotCLCfile2 <- annot(a, genBED, type="BED", nomatch=FALSE, CLC=TRUE)
+nrow(AnnotCLCfile2)
+AnnotCLCfile2[c(1:2),]
+```
+As demonstrated, this results in a difference of one row, due to the removal of the first variant in the second example. If nomatch=TRUE, variants that are not annotated, get the "NOT FOUND" flag in the annotation column. 
+
+## varfilter
+*varfilter* can be used to filter variants using a variant database like dbSNP. This function requires the input of a dbSNP file in a certain format. To make sure that the function works properly, the dbSNP file should be downloaded from the [UCSC website](http://genome.ucsc.edu/cgi-bin/hgTables?command=start), specifying the output format as "all fields from selected table" in the table browser. Take into consideration that downloading the complete dbSNP database can lead to large datafiles. 
+```{r, echo=FALSE}
+varfilter <- function(x,y, MAF, reference){
+  if (missing(x) | missing(y) | missing(reference)) {
+    stop("specify x,y and reference")
+  }
+  filtering <- data.frame()
+  y <- y[,-c(1,4:7,10:22,24,26)]
+  
+  y[,2] <- y[,2]+1
+  for (i in 1:nrow(y)) {
+    subset <- y[i,]
+    
+    allele <-unlist(strsplit(as.character(subset[,"alleles"]),"," ))
+    id <- which(allele != subset[,reference])
+    nonrefallele<-allele[id]
+    allelefreq <-unlist(strsplit(as.character(subset[,"alleleFreqs"]),"," ))
+    nonreffreq <- allelefreq[id]
+    nonreffreq <- as.numeric(nonreffreq)
+    # wat als er meerdere varianten zijn per lijn?
+    # herhaal chr, positie enz. het aantal lijnen dat er zijn
+    nrep <- length(nonreffreq)
+    subset <-subset[rep(seq_len(nrow(subset)),nrep),c(1:2)]
+    
+    subsetend <- cbind(subset, nonrefallele, nonreffreq)
+    filtering <- rbind(filtering, subsetend)
+  }
+  Text <- paste("Number of variants for filtering: ", nrow(filtering), "\n", sep="")
+  cat(Text)
+  if (!missing(MAF)){
+    id <- which(filtering$nonreffreq >= MAF )
+    if (length(id) >= 1){
+      filtering <-filtering[id,]
+      Text <- paste("Number of variants with > MAF: ", nrow(filtering), "\n", sep="")
+      cat(Text)
+    } else if (length(id) < 1) {
+      Text <- paste("No variants for filtering retained!","\n", sep="")
+      cat(Text)
+    }
+  }
+  seqvariants<-paste(x$Chromosome,x$Region, x$Allele, sep=" ")
+  filtervariants <- paste(filtering$chrom,filtering$chromStart, filtering$nonrefallele, sep=" ")
+  id <- which(seqvariants %in% filtervariants)
+  orcount <- nrow(x)
+  Text <- paste("Number of variants to be filtered: ", orcount, "\n", sep="")
+  cat(Text)
+  if (length(id)>=1){
+    x <- x[-id,]
+  }
+  if (nrow(x) >= 1){
+    Text <- paste("Number of variants from x after filtering retained: ", nrow(x), "\n", sep="")
+    cat(Text)    
+  } else {
+    Text <- paste("No variants left from x after filtering","\n", sep="")
+    cat(Text) 
+  }
+  x
+}
+
+```
+
+```{r}
+  # preprocessing of the test file (VCF format)
+  x <- test
+  sample <- "V10"
+  filter <- TRUE
+  value <- "PASS"
+  vcfvar <-VCFfile(x,sample, filter, value)
+  # results in an object with the following dimensions
+  dim(vcfvar)
+  # the variants to be filtered
+  vcfvar
+
+```
+Important: before you read in the dbSNP file, you should remove the # in the header (before bin). If this is forgotten, an error will occur when reading in the file.
+```{r}
+dim(SNP)
+```
+After preprocessing the vcf file or using the CLC file directly and loading the file containing the databasevariants, the object containing the variants of interest (which is vcfvar in this case) can be filtered:
+```{r}
+ x <- vcfvar
+ y <- SNP
+ reference <- "refNCBI"
+ MAF <- 0.03
+ a <-varfilter(x,y, MAF, reference)
+ dim(a)
+ a
+```
+Using a different MAF, the number of variants changes:
+```{r}
+ x <- vcfvar
+ y <- SNP
+ reference <- "refNCBI"
+ MAF <- 0.7
+ a <-varfilter(x,y, MAF, reference)
+ dim(a)
+ a
+```
+And finally, non-specifying MAF:
+```{r}
+ x <- vcfvar
+ y <- SNP
+ reference <- "refNCBI"
+ a <-varfilter(x,y,, reference)
+ dim(a)
+ a
+```
+
+# Variant filtering
+This section details on the main functions of the package: the variant filtering using different types of inheritance, penetrance and detectance. It can be broadly divided in two large sections: 
+* nDom and nRec
+* gDom and gRec
+
+This division is based on the grouping unit that is required to be identical amongst cases. The first two functions look at the nucleotide level: all cases should have the same nucleotide (except under a reduced penetrance). In the second group of functions, the cases are required to have an identical grouping unit (which is most often the same gene). The second group will always contain at least all the variants from the first group. A more detailed explanation can be found in the next sections. 
+
+Before going into detail, a short explanation on penetrance and detectance, as it is used in these 4 functions:
+* Penetrance: 
+    * mathematical: P(phenotype|genotype)
+    * words: the probability of seeing a certain phenotype, given genotype
+    * calculation: the number of cases, divided by the sum of cases and the number of controls with the genotype but without the phenotype
+    * It answers the question: if you have the mutation, what is the chance of you having the disease as well?
+* Detectance: 
+    * mathematical: P(genotype|phenotype)
+    * words: the probability of identifying a certain genotype, given the phenotype
+    * calculation: the number of cases with the phenotype and the genotype, divided by the total number of cases.
+    * It answers the question: if you have the disease, what is your genotype?
+    
+
+## nDom and nRec
+```{r, echo=FALSE}
+nDom <- function(x,y,family)
+{ # general prints
+  Text <- paste("Number of cases: ", length(x), "\n", sep="")
+  cat(Text)
+  if (!missing(y)){
+    Text <- paste("Number of controls: ", length(y), "\n", sep="")
+  } else {
+    Text <- paste("Number of controls: 0", "\n")
+  }
+  cat(Text)
+  if (!missing(family)) { 
+    if (family == "P-F" && length(x) == "1" && length(y) == "1" ){
+      Text <- paste("P-F mode: 1 healthy parent, 1 affected progeny", "\n", sep="")
+      cat(Text)
+    } else if (family == "Ps-F" &&  length(x) == "1" && length(y) == "2" ) {
+      Text <- paste("Ps-F mode: 2 healthy parents, 1 affected progeny", "\n", sep="")
+      cat(Text)
+    } else {
+      stop("family not correct: check number of cases/controls or selected inheritance") 
+    }
+  }
+  
+  # first x-vector (cases!!)
+  output=NULL
+  for (i in 1:length(x)){
+    nameValue<-get(x[[i]])
+    nameValue$comb <-paste(nameValue$Chromosome,nameValue$Region, nameValue$Allele, sep=" ")
+    output <-rbind(output, nameValue)
+    Text <- paste("Finished case",i, "\n" )
+    cat(Text)
+  }
+  Freq <-as.data.frame(table(output$comb), stringsAsFactors=FALSE)
+  
+  # followed by y vector (controls!!)
+  if (!missing(y) ) {
+    output=NULL
+    for (i in 1:length(y)){
+      nameValuey<-get(y[[i]])
+      nameValuey$comb <-paste(nameValuey$Chromosome,nameValuey$Region, nameValuey$Allele, sep=" ")
+      output <-rbind(output, nameValuey)
+      Text <- paste("Finished control",i, "\n" )
+      cat(Text)
+    }
+    Freq2 <-as.data.frame(table(output$comb), stringsAsFactors=FALSE)
+    
+    # next, which penetrance level is required?
+    if (missing(family)) {
+      Text <- paste("Which penetrance level is required?", "\n" )
+      cat(Text)
+      for (i in 0:length(y)) {
+        Text <- paste("level (",i,"): ", round(length(x)/(length(x)+i)*100),
+                      "%", " (",length(x),"/",length(x),"+",i,")" ,"\n", sep="")
+        cat(Text)
+      }
+      level <- as.numeric(readline("Choose level:"))
+      id <-which(Freq2$Freq >= (level+1)) 
+    } else if (family == "P-F" | family == "Ps-F") { 
+      id <- which(Freq2$Freq >= "1") 
+    }
+    # exlcusion of those variants dependent on the penetrance level
+    if (length(id) > 0) { Freq2 <- Freq2[id,]
+                          
+                          # exclusion of those variants present in the controls
+                          id <- which(Freq$Var1 %in% Freq2$Var1)
+                          if (length(id) > 0) {Freq<- Freq[-id,]}
+    }
+  }
+  # finally, which detectance level is required?
+  if (missing(family)) {
+    
+    Text <- paste("Which detectance level is required?", "\n" )
+    cat(Text)
+    for (i in 1:length(x)) {
+      Text <- paste("level (",i,"): ", i/length(x)*100,"%"," (",i,"/",length(x),")","\n", sep="")
+      cat(Text)
+      
+    }
+    level <- readline("Choose level:")
+    id <-which(Freq$Freq >= level)
+  } else if (family == "P-F" | family == "Ps-F") { 
+    id <- which(nameValue$comb %in% Freq$Var1)
+    Zygosity <-nameValue$Zygosity
+    Zygosity <-Zygosity[id]
+    Freq <-cbind(Freq, Zygosity)              
+    id <-which(Freq$Zygosity== "Heterozygous")          
+    Freq <-Freq[id,]
+    id <- which(Freq$Freq >= "1")   
+  }
+  
+  if (length(id) > 0){
+    q <-as.data.frame(str_split_fixed(Freq[id,1]," ",3), stringsAsFactors=FALSE) 
+    q <-cbind(q,Freq[id,2])
+    colnames(q) <- c("Chromosome", "Region", "Allele","Number of Samples")
+    
+    q
+  } else {
+    Text <- "No variants retained"
+    cat(Text)}
+  
+  
+}
+
+
+nRec <- function(x,y, family)
+{
+  Text <- paste("Number of cases: ", length(x), "\n", sep="")
+  cat(Text)
+  if (!missing(y)){
+    Text <- paste("Number of controls: ", length(y), "\n", sep="")
+  } else {
+    Text <- paste("Number of controls: 0", "\n")
+  }
+  cat(Text)
+  if (!missing(family)) {
+    if (family == "P-F" && length(x) == "1" && length(y) == "1" ){
+      Text <- paste("P-F mode: 1 healthy parent, 1 affected progeny", "\n", sep="")
+      cat(Text)
+    } else if (family == "Ps-F" &&  length(x) == "1" && length(y) == "2" ) {
+      Text <- paste("Ps-F mode: 2 healthy parents, 1 affected progeny", "\n", sep="")
+      cat(Text)
+    } else {
+      stop("family not correct: check number of cases/controls or selected inheritance") 
+    }
+  }
+  # first x-vector (cases!!)
+  output=NULL
+  for (i in 1:length(x)){
+    nameValue<-get(x[[i]])
+    id <- which(nameValue$Zygosity == "Homozygous")
+    nameValue <- nameValue[id,]
+    nameValue$comb <-paste(nameValue$Chromosome,nameValue$Region, nameValue$Allele, sep=" ")
+    output <-rbind(output, nameValue)
+    Text <- paste("Finished case",i, "\n" )
+    cat(Text)
+  }
+  
+  Freq <-as.data.frame(table(output$comb), stringsAsFactors=FALSE)
+  
+  # followed by y vector (controls!!)
+  if (!missing(y) ) {
+    output=NULL
+    for (i in 1:length(y)){
+      nameValuey<-get(y[[i]])
+      id <- which(nameValuey$Zygosity == "Homozygous")
+      nameValuey <- nameValuey[id,]
+      nameValuey$comb <-paste(nameValuey$Chromosome,nameValuey$Region, nameValuey$Allele, sep=" ")
+      output <-rbind(output, nameValuey)
+      Text <- paste("Finished control",i, "\n" )
+      cat(Text)
+    }
+    Freq2 <-as.data.frame(table(output$comb), stringsAsFactors=FALSE)
+    
+    # next, which penetrance level is required?
+    if (missing(family)) {
+      Text <- paste("Which penetrance level is required?", "\n" )
+      cat(Text)
+      for (i in 0:length(y)) {
+        Text <- paste("level (",i,"): ", round(length(x)/(length(x)+i)*100),
+                      "%", " (",length(x),"/",length(x),"+",i,")" ,"\n", sep="")
+        cat(Text)
+      }
+      level <- as.numeric(readline("Choose level:"))
+      id <-which(Freq2$Freq >= (level+1)) 
+      
+    } else if (family == "P-F" | family == "Ps-F") { 
+      id <- which(Freq2$Freq >= "1") 
+    }
+    
+    # exclusion of those variants present in the controls
+    if (length(id) > 0) { Freq2 <- Freq2[id,]
+                          
+                          # exclusion of those variants present in the controls
+                          id <- which(Freq$Var1 %in% Freq2$Var1)
+                          if (length(id) > 0) {Freq<- Freq[-id,]}
+    }
+  }
+  
+  # finally, which detectance level is required?
+  if (missing(family)) {
+    
+    Text <- paste("Which detectance level is required?", "\n" )
+    cat(Text)
+    for (i in 1:length(x)) {
+      Text <- paste("level (",i,"): ", i/length(x)*100,"%"," (",i,"/",length(x),")","\n", sep="")
+      cat(Text)
+      
+    }
+    level <- readline("Choose level:")
+    id <-which(Freq$Freq >= level)
+  } else if (family == "P-F" ) { 
+    output=NULL
+    for (i in 1:length(y)){
+      nameValuez<-get(y[[i]])
+      id <- which(nameValuez$Zygosity == "Heterozygous")
+      nameValuez <- nameValuez[id,]
+      nameValuez$comb <-paste(nameValuez$Chromosome,nameValuez$Region, nameValuez$Allele, sep=" ")
+      output <-rbind(output, nameValuez)
+    }  
+    Freq2 <-as.data.frame(table(output$comb), stringsAsFactors=FALSE)
+    id <- which(Freq$Var1 %in% Freq2$Var1)
+    
+  } else if (family == "Ps-F"){
+    output=NULL
+    for (i in 1:length(y)){
+      nameValuez<-get(y[[i]])
+      id <- which(nameValuez$Zygosity == "Heterozygous")
+      nameValuez <- nameValuez[id,]
+      nameValuez$comb <-paste(nameValuez$Chromosome,nameValuez$Region, nameValuez$Allele, sep=" ")
+      output <-rbind(output, nameValuez)
+    }  
+    Freq2 <-as.data.frame(table(output$comb), stringsAsFactors=FALSE)
+    id <- which(Freq2$Freq == "2")
+    Freq2 <- Freq2[id,]
+    id <- which(Freq$Var1 %in% Freq2$Var1)
+  }
+  
+  if (length(id) > 0){
+    q <-as.data.frame(str_split_fixed(Freq[id,1]," ",3), stringsAsFactors=FALSE) 
+    q <-cbind(q,Freq[id,2])
+    colnames(q) <- c("Chromosome", "Region", "Allele","Number of Samples")
+    q
+  } else {
+    Text <- "No variants retained"
+    cat(Text)}
+  
+}
+
+```
+```{r, echo=FALSE}
+gDom <- function(x,y)
+{ # first some general remarks
+  Text <- paste("Number of cases: ", length(x), "\n", sep="")
+  cat(Text)
+  if (!missing(y)){
+    Text <- paste("Number of controls: ", length(y), "\n", sep="")
+    cat(Text)
+    # followed by y vector (controls!!)
+    output=NULL
+    for (i in 1:length(y)){
+      nameValuey<-get(y[[i]])
+      nameValuey$comb <-paste(nameValuey$Chromosome,nameValuey$Region, nameValuey$Allele, sep=" ")
+      outputy <-rbind(output, nameValuey)
+      Text <- paste("Finished control",i, "\n" )
+      cat(Text)
+    }
+    Freq2 <-as.data.frame(table(outputy$comb), stringsAsFactors=FALSE)
+    # next, which penetrance level is required?
+    Text <- paste("Which penetrance level is required?", "\n" )
+    cat(Text)
+    for (i in 0:length(y)) {
+      Text <- paste("level (",i,"): ", round(length(x)/(length(x)+i)*100),
+                    "%", " (",length(x),"/",length(x),"+",i,")" ,"\n", sep="")
+      cat(Text)
+    }
+    levelpenet <- as.numeric(readline("Choose level:"))
+    id <-which(Freq2$Freq >= (levelpenet+1)) 
+    
+    
+    # exclusion of those variants dependent on the penetrance level
+    Freq2 <- Freq2[id,]
+    
+  }else {
+    Text <- paste("Number of controls: 0", "\n")
+  }
+  
+  
+  
+  # filtering:
+  # first x-vector (cases!!)
+  output=NULL
+  variantoutput=NULL
+  for (i in 1:length(x)){
+    nameValue<-get(x[[i]])
+    nameValue$comb <-paste(nameValue$Chromosome,nameValue$Region, nameValue$Allele, sep=" ")
+    
+    
+    # exclusion of those variants present in the controls
+    if (!missing(y) && nrow(Freq2) != "0") {
+      
+      id <- which(nameValue$comb %in% Freq2$Var1)
+      if (length(id) > 0) {nameValue<- nameValue[-id,]}
+    }
+    # intermezzo: grouping
+    Freq <-as.data.frame(table(nameValue[,"group"]), stringsAsFactors=FALSE)
+    output <-c(output, Freq$Var1)
+    # variantsretained
+    nameValue$overall <-paste(nameValue$comb, nameValue[,"group"], sep=" / ")
+    variantoutput<-c(variantoutput, nameValue$overall)
+    
+    Text <- paste("Finished case",i, "\n" )
+    cat(Text)
+    
+  }
+  Freq <- as.data.frame(table(output))
+  variants <-as.data.frame(table(variantoutput))
+  # which detectance level is required?
+  
+  Text <- paste("Which detectance level is required?", "\n" )
+  cat(Text)
+  for (i in 1:length(x)) {
+    Text <- paste("level (",i,"): ", i/length(x)*100,"%"," (",i,"/",length(x),")","\n", sep="")
+    cat(Text)
+  }
+  level <- readline("Choose level:")
+  
+  
+  # followed by final filtering
+  
+  id <-which(Freq$Freq >= level)
+  if (length(id) > 0){
+    q <-Freq[id,"output"]
+    r <-as.data.frame(str_split_fixed(variants[,1]," / ",2), stringsAsFactors=FALSE) 
+    
+    id <- which(r[,2] %in% q)
+    r <- r[id,]
+    r<-cbind(as.data.frame(str_split_fixed(r[,1]," ",3), stringsAsFactors=FALSE),r[,2]) 
+    r <- cbind(r,variants[id,"Freq"])
+    colnames(r) <- c("Chromosome", "Region", "Allele", "Group", "Number of samples")
+    r
+    Text <- paste("Number of variants retained: ", nrow(r), "\n", sep="")
+    cat(Text)
+    Text <- paste("Number of genes retained: ", nrow(as.data.frame(table(r$Group))), "\n", sep="")
+    cat(Text)
+  } else {
+    Text <- "None retained"
+    cat(Text)}
+  r
+}
+
+
+```
+```{r, echo=FALSE}
+gRec <- function(x,y)
+{ # first some general remarks
+  Text <- paste("Number of cases: ", length(x), "\n", sep="")
+  cat(Text)
+  if (!missing(y)){
+    Text <- paste("Number of controls: ", length(y), "\n", sep="")
+    cat(Text)
+    # followed by y vector (controls!!)
+    homo=NULL
+    hetero=NULL
+    for (i in 1:length(y)){
+      nameValuey<-get(y[[i]])
+      nameValuey$comb <-paste(nameValuey$Chromosome,nameValuey$Region, nameValuey$Allele, sep=" ")
+      id <- which(nameValuey$Zygosity =="Homozygous")
+      homozygous <- unique(nameValuey[id, "comb"])
+      heterozygous <- nameValuey[-id,]
+      pairwisecontrol = NULL
+      for (z in 1:length(levels(heterozygous[, "group"]))) {
+        Test <- subset(heterozygous[, "comb"], heterozygous[,"group"]==levels(heterozygous[,"group"])[z])
+        if (length(Test)>1){
+          a <-combn(Test,2, paste, collapse=" / ")
+          pairwisecontrol <- c(pairwisecontrol,a)}
+        
+      }
+      hetero <-c(hetero, unique(pairwisecontrol))
+      homo <-c(homo, homozygous)
+      
+      Text <- paste("Finished control",i, "\n" )
+      cat(Text)
+    }
+    Freqhomo <-as.data.frame(table(homo), stringsAsFactors=FALSE)
+    Freqhetero <-as.data.frame(table(hetero), stringsAsFactors=FALSE)
+    
+    # next, which penetrance level is required?
+    Text <- paste("Which penetrance level is required?", "\n" )
+    cat(Text)
+    for (i in 0:length(y)) {
+      Text <- paste("level (",i,"): ", round(length(x)/(length(x)+i)*100),
+                    "%", " (",length(x),"/",length(x),"+",i,")" ,"\n", sep="")
+      cat(Text)
+    }
+    levelpenet <- as.numeric(readline("Choose level:"))
+    id <-which(Freqhomo$Freq >= (levelpenet+1)) 
+    id2 <-which(Freqhetero$Freq >= (levelpenet+1)) 
+    
+    # exclusion of those variants dependent on the penetrance level
+    Freqhomo <- Freqhomo[id,]
+    Freqhetero <- Freqhetero[id2,]
+    
+  }else {
+    Text <- paste("Number of controls: 0", "\n")
+  }
+  
+  # filtering:
+  # first x-vector (cases!!)
+  output=NULL
+  variantoutput=NULL
+  for (s in 1:length(x)){
+    nameValue<-get(x[[s]])
+    nameValue$comb <-paste(nameValue$Chromosome,nameValue$Region, nameValue$Allele, sep=" ")
+    # two step filtering: 
+    # filter out all the homozygous variants present in the controls:
+    if (!missing(y) && nrow(Freqhomo) != "0") {
+      
+      id <- which(nameValue$comb %in% Freqhomo$homo)
+      if (length(id) > 0) {nameValue<- nameValue[-id,]}
+    }
+    # give homozy value 2, hetero value 1 for further filtering
+    id <- which(nameValue$Zygosity == "Homozygous")
+    Zygo <- rep(2, length(id))
+    homo <- cbind(nameValue[id,], Zygo)
+    Zygo <- rep(1, nrow(nameValue)-nrow(homo))
+    hetero <- cbind(nameValue[-id,], Zygo)
+    
+    
+    
+    # second filtering: filter out pairwise combinations
+    # generate pairwise combn
+    if (!missing(y) && nrow(Freqhetero) != "0") { 
+      pairwisecase = NULL
+      for (t in 1:length(levels(hetero[, "group"]))) {
+        Test <- subset(hetero[, "comb"], hetero[,"group"]==levels(hetero[,"group"])[t])
+        if (length(Test)>1){
+          a <-combn(Test,2, paste, collapse=" / ")
+          pairwisecase <- c(pairwisecase,a)}
+        
+      }
+      # filterstep:
+      
+      id <- which(pairwisecase %in% Freqhetero$hetero)
+      if (length(id) == 0) {
+        heteroretained <- unique(unlist(strsplit(pairwisecase, " / ")))
+        id <- which(hetero$comb %in% heteroretained)
+        hetero <- hetero[id,]
+      } else if(length(id) > 0) {
+        if (length(unique(id)) != length(pairwisecase)) {
+          pairwisecase<- pairwisecase[-id,]
+          heteroretained <- unique(unlist(strsplit(pairwisecase, " / ")))
+          id <- which(hetero$comb %in% heteroretained)
+          hetero <- hetero[id,]
+        } else if (length(id) == length(pairwisecase)){
+          hetero=NULL
+        }
+      }
+    }
+    endvariants <-rbind(homo, hetero)
+    
+    
+    
+    # followed by grouping per "gene" (defined as group)
+    grouping = NULL
+    for (i in 1:length(levels(endvariants[,"group"]))) {
+      Test <- subset(endvariants, endvariants[,"group"]==levels(endvariants[,"group"])[i])
+      if (nrow(Test) > 0) {
+        count <-sum(Test$Zygo)
+        Gene <-levels(endvariants[,"group"])[i]
+        c <- data.frame(count,Gene)
+        grouping <- rbind(grouping,c)}
+      
+    }
+    
+    # followed by selection of those "genes" with count >=2
+    id <- which(grouping$count >= 2)
+    grouping <- grouping[id,2]
+    
+    # selection of those genes with a count of >=2 from the original dataframe:
+    id <- which(endvariants[,"group"] %in% grouping)
+    endvariants <-endvariants[id,]
+    
+    Freq <-as.data.frame(table(endvariants[,"group"]), stringsAsFactors=FALSE)
+    id <- which(Freq$Freq > 0)
+    Freq <- Freq[id,]
+    output <-c(output, Freq$Var1)
+    # variantsretained
+    endvariants$overall <-paste(endvariants$comb, endvariants[,"group"], sep=" / ")
+    variantoutput<-c(variantoutput, endvariants$overall)
+    
+    Text <- paste("Finished case",s, "\n" )
+    cat(Text)
+    
+  } # end of for loop x
+  Freq <- as.data.frame(table(output))
+  variants <-as.data.frame(table(variantoutput))
+  
+  # which detectance level is required?
+  
+  Text <- paste("Which detectance level is required?", "\n" )
+  cat(Text)
+  for (i in 1:length(x)) {
+    Text <- paste("level (",i,"): ", i/length(x)*100,"%"," (",i,"/",length(x),")","\n", sep="")
+    cat(Text)
+  }
+  level <- readline("Choose level:")
+  
+  
+  # followed by final filtering
+  
+  id <-which(Freq$Freq >= level)
+  if (length(id) > 0){
+    q <-Freq[id,"output"]
+    r <-as.data.frame(str_split_fixed(variants[,1]," / ",2), stringsAsFactors=FALSE) 
+    
+    id <- which(r[,2] %in% q)
+    r <- r[id,]
+    r<-cbind(as.data.frame(str_split_fixed(r[,1]," ",3), stringsAsFactors=FALSE),r[,2]) 
+    r <- cbind(r,variants[id,"Freq"])
+    colnames(r) <- c("Chromosome", "Region", "Allele", "Group", "Number of samples")
+    r
+    Text <- paste("Number of variants retained: ", nrow(r), "\n", sep="")
+    cat(Text)
+    Text <- paste("Number of genes retained: ", nrow(as.data.frame(table(r$Group))), "\n", sep="")
+    cat(Text)
+  } else {
+    Text <- "None retained"
+    cat(Text)}
+  r
+}
+
+
+```
+The first two functions discussed are nDom and nRec. As mentioned earlier, their major difference with the other two functions is the grouping unit. Here, the nucleotide is considered to be the unit of interest. 
+
+For nDom, every non-reference variant (homozygous or heterozygous) present in a case can cause a disease. However, for nRec, only homozygous variants are able to cause a disease. This is the basic concept of Mendelian disorders. 
+
+If the number of cases is > 1 and assuming 100% detectance, every case is assumed to have the same mutation, albeit homozygous for nRec and homo- or heterozygous for nDom. If the detectance drops however, not every person with a specific phenotype has necessarily the same mutation. It might be that the person is a phenocopy (= the organism's phenotype matches a phenotype which is determined by genetic factors, but in this case, it is enviromentaly induced) or that allelic heterogeneity (= the phenomenon in which different mutations at the same locus cause a similar phenotype) or locus heterogeneity (= the phenomenon in which mutations at different loci cause a similar phenotype) is present.
+
+Adding controls increases the complexity. Under 100% penetrance, for nDom, every control is assumed to not having the disease causing mutation. This has the nice consequence that, for nDom, every variant in every control can be used for filtering . For nRec, only homozygous variants present in the controls can be used for filtering variants in the cases. If the penetrance drops beneath 100%, this means that some of the controls might have the mutation, but are not sick. There are numerous reasons for a reduced penetrance: age-dependent penetrance (the individual has to be old enough to get the disease, e.g. degenerative myelopathy in the dog), exercise-dependent penetrance (the individual has to be pushed far enough to show the phenotype, e.g. exercise-induced collapse in the dog), ... This makes filtering a lot more difficult and requires the mutation to be present in a sufficient number of controls before it can be used for filtering.
+
+Finally, two family options are available for both nRec and nDom, adding additional assumptions. In both cases, the parent(s) are assumed to be healthy  and the penetrance is assumed to be 100%. In addition, for nDom, the variant is assumed to be heterozygous in the progeny and not present in the parent(s). It is thus a reflection of the de novo mutation rate. For nRec, the variant is assumed to be homozygous in the progeny **and** heterozygous in the parent(s).
+
+Some examples:
+* nDom vs nRec with 2 cases:
+
+```{r}
+# restarting from the initial CLCfiles:
+CLCfile1[,c(1:5,9)]
+CLCfile2[,c(1:5,9)]
+```
+
+
+```{r, eval=FALSE}
+output <- nDom(c("CLCfile1","CLCfile2"))
+
+Number of cases: 2
+Number of controls: 0 
+Finished case 1 
+Finished case 2 
+Which detectance level is required? 
+level (1): 50% (1/2)
+level (2): 100% (2/2)
+Choose level:2
+
+output
+  Chromosome   Region Allele Number of Samples
+1       chr1 13397637      A                 2
+2       chr1 13397669      T                 2
+3       chr1   266523      T                 2
+4       chr1   604894      G                 2
+5       chr1   699873      A                 2
+
+output <- nRec(c("CLCfile1","CLCfile2"))
+
+Number of cases: 2
+Number of controls: 0 
+Finished case 1 
+Finished case 2 
+Which detectance level is required? 
+level (1): 50% (1/2)
+level (2): 100% (2/2)
+Choose level:2
+
+output
+  Chromosome Region Allele Number of Samples
+1       chr1 604894      G                 2
+2       chr1 699873      A                 2
+
+
+```
+Where nDom retains 5 variants, nRec only retains 2. Under 100% detectance, nDom simply retains every shared variant. nRec retains only shared variants that are also homozygous. 
+* nDom vs nRec for 1 case, 1 control:
+```{r, eval=FALSE}
+output <- nDom("CLCfile1", "CLCfile2"  )
+
+Number of cases: 1
+Number of controls: 1
+Finished case 1 
+Finished control 1 
+Which penetrance level is required? 
+level (0): 100% (1/1+0)
+level (1): 50% (1/1+1)
+Choose level:0
+Which detectance level is required? 
+level (1): 100% (1/1)
+Choose level:1
+
+output
+  Chromosome             Region Allele Number of Samples
+1       chr1 16806440..16806442      -                 1
+2       chr1             363618      G                 1
+3       chr1      758487^758488      G                 1
+
+
+output <- nRec("CLCfile1", "CLCfile2")
+
+Number of cases: 1
+Number of controls: 1
+Finished case 1 
+Finished control 1 
+Which penetrance level is required? 
+level (0): 100% (1/1+0)
+level (1): 50% (1/1+1)
+Choose level:0
+Which detectance level is required? 
+level (1): 100% (1/1)
+Choose level:1
+
+output
+  Chromosome             Region Allele Number of Samples
+1       chr1 16806440..16806442      -                 1
+2       chr1      758487^758488      G                 1
+```
+Where nDom retains 3 variants, nRec only retains 2. nDom removes every variant shared by case(s) and control(s). nRec only removes the variants that are homozygous in the controls. From the variants remaining in the case(s), it returns only the homozygous variants.
+
+* The P-F option in nRec and nDom with 1 case, 1 control:
+```{r, eval=FALSE}
+output <- nDom("CLCfile1", "CLCfile2", "P-F")
+
+Number of cases: 1
+Number of controls: 1
+P-F mode: 1 healthy parent, 1 affected progeny
+Finished case 1 
+Finished control 1 
+
+output
+  Chromosome             Region Allele Number of Samples
+1       chr1 16806440..16806442      -                 1
+
+
+output <- nRec("CLCfile1", "CLCfile2", "P-F")
+
+Number of cases: 1
+Number of controls: 1
+P-F mode: 1 healthy parent, 1 affected progeny
+Finished case 1 
+Finished control 1 
+No variants retained
+
+output
+NULL
+
+```
+nDom now returns only one variant, nRec no variants. nDom requires the variants in the case to be heterozygous after the removal of every single variant found in the control(s). One might argue that demanding the heterozygous state is not completely correct. It is true that two identical de novo mutations at the same place might occur. However, this is highly unlikely. If one wants to make sure that this possibility is taken into account, the nDom can be used but without the family option. For nRec, as no single variant is homozygous in the case (= progeny) AND heterozygous in the control (= parent), no variants are retained.
+
+A wide variation of combinations are possible, especially if reduced penetrance and detectance are taken into account. As detailing every single option would lead us to far, this is omitted. 
+
+## gDom and gRec
+The next stop in variant filtering includes the following two functions: gDom and gRec. In this section, the grouping unit is not a nucleotide, but something bigger. This is rather vague as it is user dependent. For example, it might be an exon, a gene or even an entire chromosome. Most often however, it is a gene and this will be used further throughout this section.
+
+For only one case, gDom is similar to nDom: every single variant is a possible disease causing candidate. For gRec however, for a gene to be retained it has to have at least one homozygous variant **or** be compound heterozygous (= the condition of having two heterogeneous recessive alleles at a particular locus that can cause genetic disease in a heterozygous state).
+
+If the number of cases is > 1 and the detectance is 100%, gDom looks for every gene (= grouping unit) that has at least one mutation in every single case. Thus, in contrast with nDom, it does not require the same mutation to be present in every single case. For gRec, it first retains only those genes with at least one homozygous variant or compound heterozygosity. Next, from this reduced list of genes, it retains only those genes present in every single case. Hence, both functions allow for a certain degree of genetic heterogeneity to be present.
+
+Controls can be added to filter the variants in the cases further. Again, we first assume 100% penetrance. For nDom, every variant present in every control can be used to filter the variants in the cases. After these variants have been filtered from the cases, the remaining variants are again grouped per gene and only those genes with at least one variant in every single patient are retained. For nRec, there is a two step filtering with controls. First, every homozygous variant present in every single control is used to filter the variants from the cases. Second, per control, all pairwise combinations from heterozygous variants within each gene are made. These are used to filter all pairwise combinations from variants present in the cases. Next, the same happens as mentioned in the previous paragraph for gRec.
+
+Finally, reduced penetrance and detectance result in the most complex situation. For reduced penetrance, the situation is identical to nRec/nDom: the mutation has to be present sufficiently frequent in the controls before it can be used to filter variants from the cases. With reduced detectance, the level is not the mutation, but the gene (or any other functional unit chosen as defined by the user): the gene has to be sufficiently present in the cases to be retained, but it is not required anymore to be present in every single case.
+
+Some practical examples:
+* Before filtering, we first preprocess the CLC files. Again, this is only required for gDom and gRec and it should **not** be used prior nDom and nRec.
+```{r}
+CLCfile1proc <-CLCfile(CLCfile1, "Coding.region.change", TRUE, "; ")
+CLCfile2proc <-CLCfile(CLCfile2, "Coding.region.change", TRUE, "; ")
+CLCfile1proc[,c(1,2,4,5,9,22)]
+CLCfile2proc[,c(1,2,4,5,9,22)]
+```
+* gDom vs gRec with 2 cases:
+```{r, eval=FALSE}
+output <- gDom(c("CLCfile1proc","CLCfile2proc"))
+
+Number of cases: 2
+Finished case 1 
+Finished case 2 
+Which detectance level is required? 
+level (1): 50% (1/2)
+level (2): 100% (2/2)
+Choose level:2
+Number of variants retained: 10
+Number of genes retained: 6
+
+output
+   Chromosome        Region Allele              Group Number of samples
+1        chr1      13397637      A ENSCAFT00000043665                 2
+2        chr1      13397637      A ENSCAFT00000048679                 2
+3        chr1      13397669      T ENSCAFT00000043665                 2
+4        chr1      13397669      T ENSCAFT00000048679                 2
+5        chr1        266523      T ENSCAFT00000000001                 2
+6        chr1        604894      G ENSCAFT00000000008                 2
+7        chr1        699873      A ENSCAFT00000037436                 2
+8        chr1 758461^758462      G ENSCAFT00000000011                 1
+9        chr1        758465      T ENSCAFT00000000011                 1
+10       chr1 758487^758488      G ENSCAFT00000000011                 1
+
+
+output <- gRec(c("CLCfile1proc","CLCfile2proc"))
+
+Number of cases: 2
+Finished case 1 
+Finished case 2 
+Which detectance level is required? 
+level (1): 50% (1/2)
+level (2): 100% (2/2)
+Choose level:2
+Number of variants retained: 9
+Number of genes retained: 5
+
+output
+  Chromosome        Region Allele              Group Number of samples
+1       chr1      13397637      A ENSCAFT00000043665                 2
+2       chr1      13397637      A ENSCAFT00000048679                 2
+3       chr1      13397669      T ENSCAFT00000043665                 2
+4       chr1      13397669      T ENSCAFT00000048679                 2
+5       chr1        604894      G ENSCAFT00000000008                 2
+6       chr1        699873      A ENSCAFT00000037436                 2
+7       chr1 758461^758462      G ENSCAFT00000000011                 1
+8       chr1        758465      T ENSCAFT00000000011                 1
+9       chr1 758487^758488      G ENSCAFT00000000011                 1
+```
+These functions report both the number of functional units (genes here) and the number of variants retained. Here, gDom retains 10 variants in 6 genes, nRec only retains 9 variants in 5 genes.
+* gDom vs gRec for 1 case, 1 control:
+```{r, eval=FALSE}
+output <- gDom("CLCfile1proc", "CLCfile2proc" )
+
+Number of cases: 1
+Number of controls: 1
+Finished control 1 
+Which penetrance level is required? 
+level (0): 100% (1/1+0)
+level (1): 50% (1/1+1)
+Choose level:0
+Finished case 1 
+Which detectance level is required? 
+level (1): 100% (1/1)
+Choose level:1
+Number of variants retained: 3
+Number of genes retained: 3
+
+output
+  Chromosome             Region Allele              Group Number of samples
+1       chr1 16806440..16806442      - ENSCAFT00000000149                 1
+2       chr1             363618      G ENSCAFT00000000003                 1
+3       chr1      758487^758488      G ENSCAFT00000000011                 1
+
+
+output <- gRec("CLCfile1proc", "CLCfile2proc" )
+
+Number of cases: 1
+Number of controls: 1
+Finished control 1 
+Which penetrance level is required? 
+level (0): 100% (1/1+0)
+level (1): 50% (1/1+1)
+Choose level:0
+Finished case 1 
+Which detectance level is required? 
+level (1): 100% (1/1)
+Choose level:1
+Number of variants retained: 2
+Number of genes retained: 2
+
+output
+  Chromosome             Region Allele              Group Number of samples
+1       chr1 16806440..16806442      - ENSCAFT00000000149                 1
+2       chr1      758487^758488      G ENSCAFT00000000011                 1
+
+```
+The same function with one control and one case returns 3 variants in 3 genes for gDom and 2 variants and 2 genes for gRec. 
+
+# Combining filters
+The final function was designed to further process the output of the four variant filter functions mentioned earlier. It assumes that all objects to be filtered, have the same phenotype (= input is assumed to be cases only, there is no room for controls) and that every object  has a column with an annotation. In addition, for the annotation to be useful, it should be the same for every single object: it does not make sense to group one object at the exon level and another object at the gene level. 
+```{r, echo=FALSE}
+commonvar <- function(x, group){
+  
+  # QC
+  if (missing(x) | missing(group)) {
+    stop("specify x and group")
+  }
+  if (length(x) != length(group)) {
+    stop("x and group not equal length")
+  }
+  if (length(x) < 2) {
+    stop("length(x) should be > 1")
+  }
+  
+  # actual function
+  common <- vector()
+  for (i in 1:length(x)){
+    nameValue<-get(x[[i]])
+    grouper <- group[i] 
+    var <-as.character(unique(nameValue[,grouper]))
+    common <- c(common,var)
+  }
+  
+  commongroup <-as.data.frame(table(common))
+  Text <- paste("Which detectance level is required?", "\n" )
+  cat(Text)
+  for (i in 1:length(x)) {
+    Text <- paste("level (",i,"): ", i/length(x)*100,"%"," (",i,"/",length(x),")","\n", sep="")
+    cat(Text)
+    
+  }
+  level <- readline("Choose level:")
+  id <-which(commongroup$Freq >= level)
+  if (length(id) > 0){
+    result <-as.character(commongroup[id,-2])
+    Text <- paste(length(result), "groups are retained", "\n" )
+    cat(Text)
+    
+    
+    output <- vector()
+    if (length(result) >=1 ) {
+      for (i in 1:length(x)){
+        nameValue<-get(x[[i]])
+        grouper <- group[i] 
+        id <- which(nameValue[,grouper] %in% result)
+        selection <- nameValue[id, c("Chromosome", "Region", "Allele", grouper)]
+        pasted<-paste(selection$Chromosome, selection$Region, selection$Allele, selection[,grouper], sep=" ")
+        output <-c(output, pasted)
+      }
+    }
+    res <-as.data.frame(table(output))
+    res$output <- as.character(res$output)
+    final<- cbind(as.data.frame(str_split_fixed(res[,1]," ",4)),res$Freq)
+    colnames(final) <- c("Chromosome", "Region", "Allele", "Group", "Freq")
+    final
+  }else {
+    Text <- paste("Nothing retained", "\n" )
+    cat(Text)
+  }
+}
+
+```
+A practical example: 
+* first: the preparation steps:
+```{r, eval=FALSE}
+output <- nRec("CLCfile1", "CLCfile2"  )
+
+Number of cases: 1
+Number of controls: 1
+Finished case 1 
+Finished control 1 
+Which penetrance level is required? 
+level (0): 100% (1/1+0)
+level (1): 50% (1/1+1)
+Choose level:0
+Which detectance level is required? 
+level (1): 100% (1/1)
+Choose level:1
+
+output
+  Chromosome             Region Allele Number of Samples
+1       chr1 16806440..16806442      -                 1
+2       chr1      758487^758488      G                 1
+
+
+output2 <- gDom("CLCfile1proc", "CLCfile2proc")
+
+Number of cases: 1
+Number of controls: 1
+Finished control 1 
+Which penetrance level is required? 
+level (0): 100% (1/1+0)
+level (1): 50% (1/1+1)
+Choose level:0
+Finished case 1 
+Which detectance level is required? 
+level (1): 100% (1/1)
+Choose level:1
+Number of variants retained: 3
+Number of genes retained: 3
+
+output2
+  Chromosome             Region Allele              Group Number of samples
+1       chr1 16806440..16806442      - ENSCAFT00000000149                 1
+2       chr1             363618      G ENSCAFT00000000003                 1
+3       chr1      758487^758488      G ENSCAFT00000000011                 1
+```
+We have created output for nRec and gDom now. Before we can continue processing, we have to annotate the output of the nRec function first:
+```{r, eval=FALSE}
+Annotoutput2 <- annot(output,genBED, type="BED", nomatch=FALSE, CLC=TRUE)
+
+Annotoutput2
+  Chromosome             Region Allele Number of Samples         annotation
+1       chr1 16806440..16806442      -                 1 ENSCAFT00000000149
+2       chr1      758487^758488      G                 1 ENSCAFT00000000011
+```
+* Now the objects are processed sufficiently for the *commonvar* function:
+```{r, eval=FALSE}
+> x <- c("output2", "Annotoutput2")
+> group <- c("Group", "annotation")
+> a <-commonvar(x,group)
+Which detectance level is required? 
+level (1): 50% (1/2)
+level (2): 100% (2/2)
+Choose level:2
+2 groups are retained 
+> a 
+  Chromosome             Region Allele              Group Freq
+1       chr1 16806440..16806442      - ENSCAFT00000000149    2
+2       chr1      758487^758488      G ENSCAFT00000000011    2
+```
+
+Some important remarks:
+* zygosity is **not** important in this function: it assumes that that has been taken care of in the functions used before the *commonvar* function
+* penetrance is not considered here as only cases are included in this function
+* the detectance level is variable and works at the "functional unit" level (which is gene in this case).
+
+# X-linked disorders
+Altough not directly intented for this purpose, these functions can be used in specific cases when X-linked inheritance is expected:
+* gDom: can be used every time an X-linked dominant inheritance is expected.
+* nDom: idem, except for the the *family* option as with this option, the function expects the cases to be heterozygous and this is essentially only met when the case is female. If however the zygosity for a male case is heterozygous as well (by changing this manually or this might also be default depending on the program), the *family* option can be used as well for male cases. 
+* nRec and gRec are more difficult as they make more assumptions towards zygosity. They can be safely used when all individuals (cases and if present, controls) are female. When males are included, two situations might occur:
+    * The case is male: 
+        * for nRec: mutations causing disease are assumed to be homozygous. As every single mutation can cause the disease in a male individual, changing the zygosity for every variant to homozygous (manually or this might also be default depending on the program), ensures this assumption to be met and a correct use of the function
+        * for gRec: this is currently not supported. 
+    * A control is male:
+        * for nRec: this assumes again that only homozygous mutations can cause a disease. An identical operation as under nRec should solve this situtation: change the zygosity for the male control to homozygous for every single variant.  
+        * for gRec: this is currently not supported.
+        
+In conclusion, the functions presented here can be used in almost every X-linked disorder, if the appropriate adjustments are made at the zygosity level for male individuals. 
+
+# Overview of variant filters:
+
+|filter | variant to be retained when shared by cases | variants in controls that will be used for filtering in cases |
+|:-----:|:-------------------------------------------:|:-------------------------------------------------------------:|
+|nDom | every variant | every variant |
+|nRec | homozygous variants | homozygous variants |
+|gDom | every gene with at least one variant | every variant |
+|gRec | gene with at least one homozygous variant or at least once compound heterozygous | homozygous variants and/or pairwise combination of heterozgyous variants within each gene |
+
+# Flowcharts
+## CLC file
+![](C:/Users/UGent/Documents/Mendelian/Figure3clc.png)
+
+Remark: *annot* or *CLCfile* should be used between *nRec/nDom* and *commonvar*
+## VCF file
+![](C:/Users/UGent/Documents/Mendelian/Figure4vcf.png)
+
+Remark: *annot* or *CLCfile* should be used between *nRec/nDom* and *commonvar*
