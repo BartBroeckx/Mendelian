@@ -17,3 +17,4 @@ Imports:
 Suggests:
     knitr
 VignetteBuilder: knitr
+URL: http://github.com/BartBroeckx/Mendelian
