@@ -1,7 +1,7 @@
 ---
 title: "Mendelian vignette"
 author: "Bart Broeckx"
-date: "2014-12-30"
+date: "2015-01-14"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Mendelian-vignette}
@@ -20,7 +20,7 @@ This vignette is divided in three large parts:
 * Combining filters
 
 The sequence of functions can also be found in the following graph:
-![](C:/Users/UGent/Documents/Mendelian/Figure2.png)
+![](http://www.heupdysplasie.ugent.be/Mendelian/figure2.png)
 
 *varfilter* is not mentioned as it can be used anytime, with one exception: VCF files should first be processed with *VCFfile* before *varfilter* is used.
 
@@ -1159,10 +1159,10 @@ In conclusion, the functions presented here can be used in almost every X-linked
 
 # Flowcharts
 ## CLC file
-![](C:/Users/UGent/Documents/Mendelian/Figure3clc.png)
+![](http://www.heupdysplasie.ugent.be/Mendelian/figure3clc.png)
 
 Remark: *annot* or *CLCfile* should be used between *nRec/nDom* and *commonvar*
 ## VCF file
-![](C:/Users/UGent/Documents/Mendelian/Figure4vcf.png)
+![](http://www.heupdysplasie.ugent.be/Mendelian/figure4vcf.png)
 
 Remark: *annot* or *CLCfile* should be used between *nRec/nDom* and *commonvar*

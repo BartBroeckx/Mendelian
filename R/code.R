@@ -338,7 +338,6 @@ CLCfile <- function(x,y, multiple,split)
 }
 
 ##############################################
-# nog niet volledig in orde!!!
 # Function 2: gDOm (require stringr!)
 # filtering of previously processed files
 # can be done for groups of samples
