@@ -897,85 +897,119 @@ annot <- function(x, y, type, nomatch, CLC){
 
 
 #########################################
-#' variant databse filtering from cases.
+#' Preparing variant database.
 #'
-#'@description varfilter can be used to filter case variants using a variant
-#'  database (like dbSNP).
-#'@param x the data frame to be filtered.
+#'@description prepvar is used to prepare a variant database for further
+#'  filtering with varfilter.
 #'@param y the data frame containing the variants.
-#'@param MAF optional numeric, the MAF of the non-reference variants to be
+#'@param MAF optional numeric, the MAF of the non-reference variants to be 
 #'  retained for filtering.
-#'@param reference the column containing the reference sequence in the y data frame.
-#'@details This function allows variant filtering from databases like dbSNP. MAF
-#'  is optional and specifies a minimum allele frequency for the database variants to be
-#'  retained for variant filtering in the object of interest (= x). The input of y
-#'  should be the standard output of the UCSC table browser ("all fields from
-#'  selected table").
+#'@param reference the column containing the reference sequence in the y data 
+#'  frame.
+#'@details This function prepares the variants from a database like dbSNP to be
+#'  used for filtering variants in cases. MAF is optional and specifies a
+#'  minimum allele frequency for the database variants to be retained for
+#'  variant filtering. The input of y should be the standard output of the UCSC
+#'  table browser ("all fields from selected table"). For large files, running
+#'  time can be quite long. An alternative supporting parallel computing is
+#'  prepvarpar. For the actual filtering, use varfilter.
 #'@author Bart Broeckx
 #'@examples
-#' out <-VCFfile(test, "V10", TRUE, "PASS")
-#' x <- out
 #' y <- SNP
 #' reference <- "refNCBI"
 #' MAF <- 0.03
-#' a <-varfilter(x,y, MAF, reference)
-
-varfilter <- function(x,y, MAF, reference){
-  if (missing(x) | missing(y) | missing(reference)) {
-    stop("specify x,y and reference")
-  }
+#' a <-prepvar(y, MAF, reference)
+prepvar <- function(y, MAF, reference){
+  if (missing(y) | missing(reference)) {
+    stop("specify y and reference")}
   filtering <- data.frame()
-  y <- y[,-c(1,4:7,10:22,24,26)]
-  
-  y[,2] <- y[,2]+1
+  y <- y[, -c(1, 4:7, 10:22, 24, 26)]
+  y[, 2] <- y[, 2] + 1
   for (i in 1:nrow(y)) {
-    subset <- y[i,]
-    
-    allele <-unlist(strsplit(as.character(subset[,"alleles"]),"," ))
-    id <- which(allele != subset[,reference])
-    nonrefallele<-allele[id]
-    allelefreq <-unlist(strsplit(as.character(subset[,"alleleFreqs"]),"," ))
+    subset <- y[i, ]
+    allele <- unlist(strsplit(as.character(subset[, "alleles"]), 
+                              ","))
+    id <- which(allele != subset[, reference])
+    nonrefallele <- allele[id]
+    allelefreq <- unlist(strsplit(as.character(subset[, "alleleFreqs"]), 
+                                  ","))
     nonreffreq <- allelefreq[id]
     nonreffreq <- as.numeric(nonreffreq)
-    # wat als er meerdere varianten zijn per lijn?
-    # herhaal chr, positie enz. het aantal lijnen dat er zijn
     nrep <- length(nonreffreq)
-    subset <-subset[rep(seq_len(nrow(subset)),nrep),c(1:2)]
-    
+    subset <- subset[rep(seq_len(nrow(subset)), nrep), c(1:2)]
     subsetend <- cbind(subset, nonrefallele, nonreffreq)
     filtering <- rbind(filtering, subsetend)
-  }
-  Text <- paste("Number of variants for filtering: ", nrow(filtering), "\n", sep="")
-  cat(Text)
-  if (!missing(MAF)){
-    id <- which(filtering$nonreffreq >= MAF )
-    if (length(id) >= 1){
-      filtering <-filtering[id,]
-      Text <- paste("Number of variants with > MAF: ", nrow(filtering), "\n", sep="")
-      cat(Text)
-    } else if (length(id) < 1) {
-      Text <- paste("No variants for filtering retained!","\n", sep="")
+    if (i ==round(nrow(y)/20) | i ==round(nrow(y)/10) | i ==round(nrow(y)/5) |
+          i ==round(nrow(y)/3.33) |i ==round(nrow(y)/2.5) | i ==round(nrow(y)/2) | 
+          i ==round(nrow(y)/1.66) | i ==round(nrow(y)/1.42) | i ==round(nrow(y)/1.25) | 
+          i ==round(nrow(y)/1.11)) {
+      Text <- paste(round(i/nrow(y)*100), "procent prepared", "\n", sep=" ")
       cat(Text)
     }
   }
-  seqvariants<-paste(x$Chromosome,x$Region, x$Allele, sep=" ")
-  filtervariants <- paste(filtering$chrom,filtering$chromStart, filtering$nonrefallele, sep=" ")
-  id <- which(seqvariants %in% filtervariants)
-  orcount <- nrow(x)
-  Text <- paste("Number of variants to be filtered: ", orcount, "\n", sep="")
+  Text <- paste("Number of variants for filtering: ", nrow(filtering), 
+                "\n", sep = "")
   cat(Text)
-  if (length(id)>=1){
-    x <- x[-id,]
+  if (!missing(MAF)) {
+    id <- which(filtering$nonreffreq >= MAF)
+    if (length(id) >= 1) {
+      filtering <- filtering[id, ]
+      Text <- paste("Number of variants with > MAF: ", 
+                    nrow(filtering), "\n", sep = "")
+      cat(Text)
+    }
+    else if (length(id) < 1) {
+      Text <- paste("No variants for filtering retained!", 
+                    "\n", sep = "")
+      cat(Text)
+    }
   }
-  if (nrow(x) >= 1){
-    Text <- paste("Number of variants from x after filtering retained: ", nrow(x), "\n", sep="")
-    cat(Text)    
-  } else {
-    Text <- paste("No variants left from x after filtering","\n", sep="")
-    cat(Text) 
-  }
-  x
+  filtering
 }
+
+#####################################################
+#' Filtering variants from a database.
+#'
+#'@description varfilter is used to filter case variants using a variant
+#'  database (like dbSNP).
+#'@param x the data frame to be filtered
+#'@param y the data frame containing the variants.
+#'@details After preprocessing the variant database with prepvar or
+#'  prepvarpar, the actual filtering is done with varfilter.
+#'@author Bart Broeckx
+#'@examples
+#' out <-VCFfile(test, "V10", TRUE, "PASS")
+#' a <-prepvar(SNP, 0.03,"refNCBI")
+#' filtered <-varfilter(out,a)
+varfilter<- function(x,y){
+if (missing(x) | missing(y)) {
+  stop("specify x and y")}
+seqvariants <- paste(x$Chromosome, x$Region, x$Allele, sep = " ")
+filtering <- y
+filtervariants <- paste(filtering$chrom, filtering$chromStart, 
+                        filtering$nonrefallele, sep = " ")
+id <- which(seqvariants %in% filtervariants)
+orcount <- nrow(x)
+Text <- paste("Number of variants to be filtered: ", orcount, 
+              "\n", sep = "")
+cat(Text)
+if (length(id) >= 1) {
+  x <- x[-id, ]
+}
+if (nrow(x) >= 1) {
+  Text <- paste("Number of variants from x after filtering retained: ", 
+                nrow(x), "\n", sep = "")
+  cat(Text)
+}
+else {
+  Text <- paste("No variants left from x after filtering", 
+                "\n", sep = "")
+  cat(Text)
+}
+x
+}
+
+
 
 
 ############################################

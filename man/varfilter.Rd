@@ -2,38 +2,27 @@
 % Please edit documentation in R/code.R
 \name{varfilter}
 \alias{varfilter}
-\title{variant databse filtering from cases.}
+\title{Filtering variants from a database.}
 \usage{
-varfilter(x, y, MAF, reference)
+varfilter(x, y)
 }
 \arguments{
-\item{x}{the data frame to be filtered.}
+\item{x}{the data frame to be filtered}
 
 \item{y}{the data frame containing the variants.}
-
-\item{MAF}{optional numeric, the MAF of the non-reference variants to be
-retained for filtering.}
-
-\item{reference}{the column containing the reference sequence in the y data frame.}
 }
 \description{
-varfilter can be used to filter case variants using a variant
+varfilter is used to filter case variants using a variant
  database (like dbSNP).
 }
 \details{
-This function allows variant filtering from databases like dbSNP. MAF
- is optional and specifies a minimum allele frequency for the database variants to be
- retained for variant filtering in the object of interest (= x). The input of y
- should be the standard output of the UCSC table browser ("all fields from
- selected table").
+After preprocessing the variant database with prepvar or
+ prepvarpar, the actual filtering is done with varfilter.
 }
 \examples{
 out <-VCFfile(test, "V10", TRUE, "PASS")
-x <- out
-y <- SNP
-reference <- "refNCBI"
-MAF <- 0.03
-a <-varfilter(x,y, MAF, reference)
+a <-prepvar(SNP, 0.03,"refNCBI")
+filtered <-varfilter(out,a)
 }
 \author{
 Bart Broeckx

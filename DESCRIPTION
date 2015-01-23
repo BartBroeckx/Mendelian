@@ -8,13 +8,13 @@ Description: This package allows the processing of genomic variants for
     and other species. Input files can be VCF files and tables generated in
     CLC Genomics Workbench. Various filters can be applied, including reduced
     penetrance and detectance.
-Depends:
+Depends: 
     R (>= 3.1.0)
 License: GPL-2
 LazyData: true
-Imports:
+Imports: 
     stringr
-Suggests:
+Suggests: 
     knitr
 VignetteBuilder: knitr
 URL: http://github.com/BartBroeckx/Mendelian
