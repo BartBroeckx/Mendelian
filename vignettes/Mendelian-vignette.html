@@ -664,25 +664,112 @@ nrow(AnnotCLCfile2)
 
 <p>As demonstrated, this results in a difference of one row, due to the removal of the first variant in the second example. If nomatch=TRUE, variants that are not annotated, get the &ldquo;NOT FOUND&rdquo; flag in the annotation column. </p>
 
-<h2>varfilter</h2>
+<h2>Database filtering</h2>
 
-<p><em>varfilter</em> can be used to filter variants using a variant database like dbSNP. This function requires the input of a dbSNP file in a certain format. To make sure that the function works properly, the dbSNP file should be downloaded from the <a href="http://genome.ucsc.edu/cgi-bin/hgTables?command=start">UCSC website</a>, specifying the output format as &ldquo;all fields from selected table&rdquo; in the table browser. Take into consideration that downloading the complete dbSNP database can lead to large datafiles. </p>
+<p>Mendelian supports filtering against popular variant databases, like dbSNP. Three functions are available:</p>
 
-<pre><code class="r">  # preprocessing of the test file (VCF format)
-  x &lt;- test
-  sample &lt;- &quot;V10&quot;
-  filter &lt;- TRUE
-  value &lt;- &quot;PASS&quot;
-  vcfvar &lt;-VCFfile(x,sample, filter, value)
-  # results in an object with the following dimensions
-  dim(vcfvar)
+<ul>
+<li>a preparatory step: <em>prepvar</em> and <em>prepvarpar</em></li>
+<li>the actual filtering: <em>varfilter</em></li>
+</ul>
+
+<p><em>Prepvar</em> and <em>prepvarpar</em> require the input of a dbSNP file in a certain format. To make sure that the function works properly, the dbSNP file should be downloaded from the <a href="http://genome.ucsc.edu/cgi-bin/hgTables?command=start">UCSC website</a>, specifying the output format as &ldquo;all fields from selected table&rdquo; in the table browser. Take into consideration that downloading the complete dbSNP database can lead to large datafiles. The difference between <em>prepvar</em> and <em>prepvarpar</em> is that <em>prepvarpar</em> supports parallel computing. This is especially useful when the whole dbSNP is used. </p>
+
+<p>Important: before you read in the dbSNP file, you should remove the # in the header (before bin). If this is forgotten, an error will occur when reading in the file.</p>
+
+<pre><code class="r">dim(SNP)
 </code></pre>
 
-<pre><code>## [1] 6 4
+<pre><code>## [1] 472  26
 </code></pre>
 
-<pre><code class="r">  # the variants to be filtered
-  vcfvar
+<p>After preprocessing the vcf file or using the CLC file directly and loading the file containing the databasevariants, the databasevariantsfile is preprocessed:</p>
+
+<pre><code class="r"> y &lt;- SNP
+ reference &lt;- &quot;refNCBI&quot;
+ MAF &lt;- 0.03
+ a &lt;- prepvar(y, MAF, reference) 
+</code></pre>
+
+<pre><code>## 5 procent prepared 
+## 10 procent prepared 
+## 20 procent prepared 
+## 30 procent prepared 
+## 40 procent prepared 
+## 50 procent prepared 
+## 60 procent prepared 
+## 70 procent prepared 
+## 80 procent prepared 
+## 90 procent prepared 
+## Number of variants for filtering: 526
+## Number of variants with &gt; MAF: 355
+</code></pre>
+
+<pre><code class="r">dim(a)
+</code></pre>
+
+<pre><code>## [1] 355   4
+</code></pre>
+
+<p>Using a different MAF, the number of variants changes:</p>
+
+<pre><code class="r"> y &lt;- SNP
+ reference &lt;- &quot;refNCBI&quot;
+ MAF &lt;- 0.7
+ a &lt;- prepvar(y, MAF, reference)
+</code></pre>
+
+<pre><code>## 5 procent prepared 
+## 10 procent prepared 
+## 20 procent prepared 
+## 30 procent prepared 
+## 40 procent prepared 
+## 50 procent prepared 
+## 60 procent prepared 
+## 70 procent prepared 
+## 80 procent prepared 
+## 90 procent prepared 
+## Number of variants for filtering: 526
+## Number of variants with &gt; MAF: 73
+</code></pre>
+
+<pre><code class="r"> dim(a)
+</code></pre>
+
+<pre><code>## [1] 73  4
+</code></pre>
+
+<p>And finally, non-specifying MAF:</p>
+
+<pre><code class="r"> rm(MAF)
+ y &lt;- SNP
+ reference &lt;- &quot;refNCBI&quot;
+ a &lt;- prepvar(y,, reference) 
+</code></pre>
+
+<pre><code>## 5 procent prepared 
+## 10 procent prepared 
+## 20 procent prepared 
+## 30 procent prepared 
+## 40 procent prepared 
+## 50 procent prepared 
+## 60 procent prepared 
+## 70 procent prepared 
+## 80 procent prepared 
+## 90 procent prepared 
+## Number of variants for filtering: 526
+</code></pre>
+
+<pre><code class="r"> dim(a)
+</code></pre>
+
+<pre><code>## [1] 526   4
+</code></pre>
+
+<p>After this preparatory step, the actual filtering is done:</p>
+
+<pre><code class="r">vcfvar &lt;- VCFfile(test, &quot;V10&quot;, TRUE, &quot;PASS&quot;)
+vcfvar
 </code></pre>
 
 <pre><code>##      Chromosome  Region Allele     Zygosity
@@ -694,64 +781,56 @@ nrow(AnnotCLCfile2)
 ## 178        chr1 1586752      C   Homozygous
 </code></pre>
 
-<p>Important: before you read in the dbSNP file, you should remove the # in the header (before bin). If this is forgotten, an error will occur when reading in the file.</p>
-
-<pre><code class="r">dim(SNP)
+<pre><code class="r">a &lt;- prepvar(y, 0.03, reference) 
 </code></pre>
 
-<pre><code>## [1] 472  26
-</code></pre>
-
-<p>After preprocessing the vcf file or using the CLC file directly and loading the file containing the databasevariants, the object containing the variants of interest (which is vcfvar in this case) can be filtered:</p>
-
-<pre><code class="r"> x &lt;- vcfvar
- y &lt;- SNP
- reference &lt;- &quot;refNCBI&quot;
- MAF &lt;- 0.03
- a &lt;-varfilter(x,y, MAF, reference)
-</code></pre>
-
-<pre><code>## Number of variants for filtering: 526
+<pre><code>## 5 procent prepared 
+## 10 procent prepared 
+## 20 procent prepared 
+## 30 procent prepared 
+## 40 procent prepared 
+## 50 procent prepared 
+## 60 procent prepared 
+## 70 procent prepared 
+## 80 procent prepared 
+## 90 procent prepared 
+## Number of variants for filtering: 526
 ## Number of variants with &gt; MAF: 355
-## Number of variants to be filtered: 6
+</code></pre>
+
+<pre><code class="r">varfilter(vcfvar, a)
+</code></pre>
+
+<pre><code>## Number of variants to be filtered: 6
 ## Number of variants from x after filtering retained: 1
-</code></pre>
-
-<pre><code class="r"> dim(a)
-</code></pre>
-
-<pre><code>## [1] 1 4
-</code></pre>
-
-<pre><code class="r"> a
 </code></pre>
 
 <pre><code>##      Chromosome  Region Allele     Zygosity
 ## 1711       chr1 1581713      G Heterozygous
 </code></pre>
 
-<p>Using a different MAF, the number of variants changes:</p>
-
-<pre><code class="r"> x &lt;- vcfvar
- y &lt;- SNP
- reference &lt;- &quot;refNCBI&quot;
- MAF &lt;- 0.7
- a &lt;-varfilter(x,y, MAF, reference)
+<pre><code class="r">a &lt;- prepvar(y, 0.70, reference) 
 </code></pre>
 
-<pre><code>## Number of variants for filtering: 526
+<pre><code>## 5 procent prepared 
+## 10 procent prepared 
+## 20 procent prepared 
+## 30 procent prepared 
+## 40 procent prepared 
+## 50 procent prepared 
+## 60 procent prepared 
+## 70 procent prepared 
+## 80 procent prepared 
+## 90 procent prepared 
+## Number of variants for filtering: 526
 ## Number of variants with &gt; MAF: 73
-## Number of variants to be filtered: 6
+</code></pre>
+
+<pre><code class="r">varfilter(vcfvar, a)
+</code></pre>
+
+<pre><code>## Number of variants to be filtered: 6
 ## Number of variants from x after filtering retained: 5
-</code></pre>
-
-<pre><code class="r"> dim(a)
-</code></pre>
-
-<pre><code>## [1] 5 4
-</code></pre>
-
-<pre><code class="r"> a
 </code></pre>
 
 <pre><code>##      Chromosome  Region Allele     Zygosity
@@ -762,31 +841,34 @@ nrow(AnnotCLCfile2)
 ## 177        chr1 1585642      T   Homozygous
 </code></pre>
 
-<p>And finally, non-specifying MAF:</p>
-
-<pre><code class="r"> x &lt;- vcfvar
- y &lt;- SNP
- reference &lt;- &quot;refNCBI&quot;
- a &lt;-varfilter(x,y,, reference)
+<pre><code class="r">a &lt;- prepvar(y,, reference) 
 </code></pre>
 
-<pre><code>## Number of variants for filtering: 526
-## Number of variants to be filtered: 6
+<pre><code>## 5 procent prepared 
+## 10 procent prepared 
+## 20 procent prepared 
+## 30 procent prepared 
+## 40 procent prepared 
+## 50 procent prepared 
+## 60 procent prepared 
+## 70 procent prepared 
+## 80 procent prepared 
+## 90 procent prepared 
+## Number of variants for filtering: 526
+</code></pre>
+
+<pre><code class="r">varfilter(vcfvar, a)
+</code></pre>
+
+<pre><code>## Number of variants to be filtered: 6
 ## No variants left from x after filtering
-</code></pre>
-
-<pre><code class="r"> dim(a)
-</code></pre>
-
-<pre><code>## [1] 0 4
-</code></pre>
-
-<pre><code class="r"> a
 </code></pre>
 
 <pre><code>## [1] Chromosome Region     Allele     Zygosity  
 ## &lt;0 rows&gt; (or 0-length row.names)
 </code></pre>
+
+<p>The MAF used clearly affects the number of variants.</p>
 
 <h1>Variant filtering</h1>
 
@@ -806,7 +888,7 @@ nrow(AnnotCLCfile2)
 
 <ul>
 <li>mathematical: P(phenotype|genotype)</li>
-<li>words: the probability of seeing a certain phenotype, given genotype</li>
+<li>words: the probability of seeing a certain phenotype, given the genotype</li>
 <li>calculation: the number of cases, divided by the sum of cases and the number of controls with the genotype but without the phenotype</li>
 <li>It answers the question: if you have the mutation, what is the chance of you having the disease as well?</li>
 </ul></li>
@@ -1330,7 +1412,7 @@ Choose level:2
 
 <p><img src="http://www.heupdysplasie.ugent.be/Mendelian/figure4vcf.png" alt=""/></p>
 
-<p>Remark: <em>annot</em> or <em>CLCfile</em> should be used between <em>nRec/nDom</em> and <em>commonvar</em></p>
+<p>Remark: <em>annot</em> should be used between <em>nRec/nDom</em> and <em>commonvar</em></p>
 
 </body>
 

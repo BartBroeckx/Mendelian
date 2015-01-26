@@ -335,114 +335,196 @@ AnnotCLCfile2[c(1:2),]
 ```
 As demonstrated, this results in a difference of one row, due to the removal of the first variant in the second example. If nomatch=TRUE, variants that are not annotated, get the "NOT FOUND" flag in the annotation column. 
 
-## varfilter
-*varfilter* can be used to filter variants using a variant database like dbSNP. This function requires the input of a dbSNP file in a certain format. To make sure that the function works properly, the dbSNP file should be downloaded from the [UCSC website](http://genome.ucsc.edu/cgi-bin/hgTables?command=start), specifying the output format as "all fields from selected table" in the table browser. Take into consideration that downloading the complete dbSNP database can lead to large datafiles. 
+## Database filtering
+Mendelian supports filtering against popular variant databases, like dbSNP. Three functions are available:
+* a preparatory step: *prepvar* and *prepvarpar*
+* the actual filtering: *varfilter*
+
+*Prepvar* and *prepvarpar* require the input of a dbSNP file in a certain format. To make sure that the function works properly, the dbSNP file should be downloaded from the [UCSC website](http://genome.ucsc.edu/cgi-bin/hgTables?command=start), specifying the output format as "all fields from selected table" in the table browser. Take into consideration that downloading the complete dbSNP database can lead to large datafiles. The difference between *prepvar* and *prepvarpar* is that *prepvarpar* supports parallel computing. This is especially useful when the whole dbSNP is used. 
 ```{r, echo=FALSE}
-varfilter <- function(x,y, MAF, reference){
-  if (missing(x) | missing(y) | missing(reference)) {
-    stop("specify x,y and reference")
-  }
+varfilter<- function(x,y){
+if (missing(x) | missing(y)) {
+  stop("specify x and y")}
+seqvariants <- paste(x$Chromosome, x$Region, x$Allele, sep = " ")
+filtering <- y
+filtervariants <- paste(filtering$chrom, filtering$chromStart, 
+                        filtering$nonrefallele, sep = " ")
+id <- which(seqvariants %in% filtervariants)
+orcount <- nrow(x)
+Text <- paste("Number of variants to be filtered: ", orcount, 
+              "\n", sep = "")
+cat(Text)
+if (length(id) >= 1) {
+  x <- x[-id, ]
+}
+if (nrow(x) >= 1) {
+  Text <- paste("Number of variants from x after filtering retained: ", 
+                nrow(x), "\n", sep = "")
+  cat(Text)
+}
+else {
+  Text <- paste("No variants left from x after filtering", 
+                "\n", sep = "")
+  cat(Text)
+}
+x
+}
+
+
+prepvar <- function(y, MAF, reference){
+  if (missing(y) | missing(reference)) {
+    stop("specify y and reference")}
   filtering <- data.frame()
-  y <- y[,-c(1,4:7,10:22,24,26)]
-  
-  y[,2] <- y[,2]+1
+  y <- y[, -c(1, 4:7, 10:22, 24, 26)]
+  y[, 2] <- y[, 2] + 1
   for (i in 1:nrow(y)) {
-    subset <- y[i,]
-    
-    allele <-unlist(strsplit(as.character(subset[,"alleles"]),"," ))
-    id <- which(allele != subset[,reference])
-    nonrefallele<-allele[id]
-    allelefreq <-unlist(strsplit(as.character(subset[,"alleleFreqs"]),"," ))
+    subset <- y[i, ]
+    allele <- unlist(strsplit(as.character(subset[, "alleles"]), 
+                              ","))
+    id <- which(allele != subset[, reference])
+    nonrefallele <- allele[id]
+    allelefreq <- unlist(strsplit(as.character(subset[, "alleleFreqs"]), 
+                                  ","))
     nonreffreq <- allelefreq[id]
     nonreffreq <- as.numeric(nonreffreq)
-    # wat als er meerdere varianten zijn per lijn?
-    # herhaal chr, positie enz. het aantal lijnen dat er zijn
     nrep <- length(nonreffreq)
-    subset <-subset[rep(seq_len(nrow(subset)),nrep),c(1:2)]
-    
+    subset <- subset[rep(seq_len(nrow(subset)), nrep), c(1:2)]
     subsetend <- cbind(subset, nonrefallele, nonreffreq)
     filtering <- rbind(filtering, subsetend)
-  }
-  Text <- paste("Number of variants for filtering: ", nrow(filtering), "\n", sep="")
-  cat(Text)
-  if (!missing(MAF)){
-    id <- which(filtering$nonreffreq >= MAF )
-    if (length(id) >= 1){
-      filtering <-filtering[id,]
-      Text <- paste("Number of variants with > MAF: ", nrow(filtering), "\n", sep="")
-      cat(Text)
-    } else if (length(id) < 1) {
-      Text <- paste("No variants for filtering retained!","\n", sep="")
+    if (i ==round(nrow(y)/20) | i ==round(nrow(y)/10) | i ==round(nrow(y)/5) |
+          i ==round(nrow(y)/3.33) |i ==round(nrow(y)/2.5) | i ==round(nrow(y)/2) | 
+          i ==round(nrow(y)/1.66) | i ==round(nrow(y)/1.42) | i ==round(nrow(y)/1.25) | 
+          i ==round(nrow(y)/1.11)) {
+      Text <- paste(round(i/nrow(y)*100), "procent prepared", "\n", sep=" ")
       cat(Text)
     }
   }
-  seqvariants<-paste(x$Chromosome,x$Region, x$Allele, sep=" ")
-  filtervariants <- paste(filtering$chrom,filtering$chromStart, filtering$nonrefallele, sep=" ")
-  id <- which(seqvariants %in% filtervariants)
-  orcount <- nrow(x)
-  Text <- paste("Number of variants to be filtered: ", orcount, "\n", sep="")
+  Text <- paste("Number of variants for filtering: ", nrow(filtering), 
+                "\n", sep = "")
   cat(Text)
-  if (length(id)>=1){
-    x <- x[-id,]
+  if (!missing(MAF)) {
+    id <- which(filtering$nonreffreq >= MAF)
+    if (length(id) >= 1) {
+      filtering <- filtering[id, ]
+      Text <- paste("Number of variants with > MAF: ", 
+                    nrow(filtering), "\n", sep = "")
+      cat(Text)
+    }
+    else if (length(id) < 1) {
+      Text <- paste("No variants for filtering retained!", 
+                    "\n", sep = "")
+      cat(Text)
+    }
   }
-  if (nrow(x) >= 1){
-    Text <- paste("Number of variants from x after filtering retained: ", nrow(x), "\n", sep="")
-    cat(Text)    
-  } else {
-    Text <- paste("No variants left from x after filtering","\n", sep="")
-    cat(Text) 
-  }
-  x
+  filtering
 }
 
-```
+prepvarpar <- function(y, MAF, reference, nproc){
+  "%dopar%" <- NA
+  rm("%dopar%")
+  if (missing(y) | missing(reference)) {
+    stop("specify y and reference")}
+  y <- y[, -c(1, 4:7, 10:22, 24, 26)]
+  y[, 2] <- y[, 2] + 1
+  indic <-rep(1:nproc, length.out=nrow(y))
+  indic <- sort(indic)
+  indic <- as.factor(indic)
+  y <- cbind(y,indic)
+  splits <- iterators::isplit(y,y$indic)
+  subsety=NULL
+  result<- foreach::foreach(subsety=splits, .combine='rbind') %dopar% {
+    filtering <- data.frame()
+    for (i in 1:nrow(subsety$value)) {
+      subset <- subsety$value[i, ]
+      allele <- unlist(strsplit(as.character(subset[, "alleles"]), 
+                                ","))
+      id <- which(allele != subset[, reference])
+      nonrefallele <- allele[id]
+      allelefreq <- unlist(strsplit(as.character(subset[, "alleleFreqs"]), 
+                                    ","))
+      nonreffreq <- allelefreq[id]
+      nonreffreq <- as.numeric(nonreffreq)
+      nrep <- length(nonreffreq)
+      subset <- subset[rep(seq_len(nrow(subset)), nrep), c(1:2)]
+      subsetend <- cbind(subset, nonrefallele, nonreffreq)
+      filtering <- rbind(filtering, subsetend)
+    }
+    prelist <-list(value=filtering)
+    presubset<- subsety[-1]
+    result <- c(prelist,presubset)
+  }
+  empty=NULL
+  for (i in 1:nproc) {
+    prepdata<-as.data.frame(result[[i]])
+    empty <- rbind(empty,prepdata)
+    
+  }
+  filtering<- empty 
+  Text <- paste("Number of variants for filtering: ", nrow(filtering), 
+                "\n", sep = "")
+  cat(Text)
+  if (!missing(MAF)) {
+    id <- which(filtering$nonreffreq >= MAF)
+    if (length(id) >= 1) {
+      filtering <- filtering[id, ]
+      Text <- paste("Number of variants with > MAF: ", 
+                    nrow(filtering), "\n", sep = "")
+      cat(Text)
+    }
+    else if (length(id) < 1) {
+      Text <- paste("No variants for filtering retained!", 
+                    "\n", sep = "")
+      cat(Text)
+    }
+  }
+  filtering
+}
 
-```{r}
-  # preprocessing of the test file (VCF format)
-  x <- test
-  sample <- "V10"
-  filter <- TRUE
-  value <- "PASS"
-  vcfvar <-VCFfile(x,sample, filter, value)
-  # results in an object with the following dimensions
-  dim(vcfvar)
-  # the variants to be filtered
-  vcfvar
 
 ```
 Important: before you read in the dbSNP file, you should remove the # in the header (before bin). If this is forgotten, an error will occur when reading in the file.
 ```{r}
 dim(SNP)
 ```
-After preprocessing the vcf file or using the CLC file directly and loading the file containing the databasevariants, the object containing the variants of interest (which is vcfvar in this case) can be filtered:
+After preprocessing the vcf file or using the CLC file directly and loading the file containing the databasevariants, the databasevariantsfile is preprocessed:
 ```{r}
- x <- vcfvar
  y <- SNP
  reference <- "refNCBI"
  MAF <- 0.03
- a <-varfilter(x,y, MAF, reference)
- dim(a)
- a
+ a <- prepvar(y, MAF, reference) 
+dim(a)
 ```
 Using a different MAF, the number of variants changes:
 ```{r}
- x <- vcfvar
+
  y <- SNP
  reference <- "refNCBI"
  MAF <- 0.7
- a <-varfilter(x,y, MAF, reference)
+ a <- prepvar(y, MAF, reference)
  dim(a)
- a
 ```
 And finally, non-specifying MAF:
 ```{r}
- x <- vcfvar
+ rm(MAF)
  y <- SNP
  reference <- "refNCBI"
- a <-varfilter(x,y,, reference)
+ a <- prepvar(y,, reference) 
  dim(a)
- a
 ```
+
+After this preparatory step, the actual filtering is done:
+```{r}
+vcfvar <- VCFfile(test, "V10", TRUE, "PASS")
+vcfvar
+a <- prepvar(y, 0.03, reference) 
+varfilter(vcfvar, a)
+a <- prepvar(y, 0.70, reference) 
+varfilter(vcfvar, a)
+a <- prepvar(y,, reference) 
+varfilter(vcfvar, a)
+
+```
+The MAF used clearly affects the number of variants.
 
 # Variant filtering
 This section details on the main functions of the package: the variant filtering using different types of inheritance, penetrance and detectance. It can be broadly divided in two large sections: 
@@ -454,7 +536,7 @@ This division is based on the grouping unit that is required to be identical amo
 Before going into detail, a short explanation on penetrance and detectance, as it is used in these 4 functions:
 * Penetrance: 
     * mathematical: P(phenotype|genotype)
-    * words: the probability of seeing a certain phenotype, given genotype
+    * words: the probability of seeing a certain phenotype, given the genotype
     * calculation: the number of cases, divided by the sum of cases and the number of controls with the genotype but without the phenotype
     * It answers the question: if you have the mutation, what is the chance of you having the disease as well?
 * Detectance: 
@@ -1400,8 +1482,8 @@ In conclusion, the functions presented here can be used in almost every X-linked
 ## CLC file
 ![](http://www.heupdysplasie.ugent.be/Mendelian/figure3clc.png)
 
-Remark: *annot* or *CLCfile* should be used between *nRec/nDom* and *commonvar*
+Remark: *annot* should be used between *nRec/nDom* and *commonvar*
 ## VCF file
 ![](http://www.heupdysplasie.ugent.be/Mendelian/figure4vcf.png)
 
-Remark: *annot* or *CLCfile* should be used between *nRec/nDom* and *commonvar*
+Remark: *annot* should be used between *nRec/nDom* and *commonvar*

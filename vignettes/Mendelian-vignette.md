@@ -1,7 +1,7 @@
 ---
 title: "Mendelian vignette"
 author: "Bart Broeckx"
-date: "2015-01-14"
+date: "2015-01-26"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Mendelian-vignette}
@@ -542,29 +542,120 @@ AnnotCLCfile2[c(1:2),]
 ```
 As demonstrated, this results in a difference of one row, due to the removal of the first variant in the second example. If nomatch=TRUE, variants that are not annotated, get the "NOT FOUND" flag in the annotation column. 
 
-## varfilter
-*varfilter* can be used to filter variants using a variant database like dbSNP. This function requires the input of a dbSNP file in a certain format. To make sure that the function works properly, the dbSNP file should be downloaded from the [UCSC website](http://genome.ucsc.edu/cgi-bin/hgTables?command=start), specifying the output format as "all fields from selected table" in the table browser. Take into consideration that downloading the complete dbSNP database can lead to large datafiles. 
+## Database filtering
+Mendelian supports filtering against popular variant databases, like dbSNP. Three functions are available:
+* a preparatory step: *prepvar* and *prepvarpar*
+* the actual filtering: *varfilter*
 
+*Prepvar* and *prepvarpar* require the input of a dbSNP file in a certain format. To make sure that the function works properly, the dbSNP file should be downloaded from the [UCSC website](http://genome.ucsc.edu/cgi-bin/hgTables?command=start), specifying the output format as "all fields from selected table" in the table browser. Take into consideration that downloading the complete dbSNP database can lead to large datafiles. The difference between *prepvar* and *prepvarpar* is that *prepvarpar* supports parallel computing. This is especially useful when the whole dbSNP is used. 
 
-
-```r
-  # preprocessing of the test file (VCF format)
-  x <- test
-  sample <- "V10"
-  filter <- TRUE
-  value <- "PASS"
-  vcfvar <-VCFfile(x,sample, filter, value)
-  # results in an object with the following dimensions
-  dim(vcfvar)
-```
-
-```
-## [1] 6 4
-```
+Important: before you read in the dbSNP file, you should remove the # in the header (before bin). If this is forgotten, an error will occur when reading in the file.
 
 ```r
-  # the variants to be filtered
-  vcfvar
+dim(SNP)
+```
+
+```
+## [1] 472  26
+```
+After preprocessing the vcf file or using the CLC file directly and loading the file containing the databasevariants, the databasevariantsfile is preprocessed:
+
+```r
+ y <- SNP
+ reference <- "refNCBI"
+ MAF <- 0.03
+ a <- prepvar(y, MAF, reference) 
+```
+
+```
+## 5 procent prepared 
+## 10 procent prepared 
+## 20 procent prepared 
+## 30 procent prepared 
+## 40 procent prepared 
+## 50 procent prepared 
+## 60 procent prepared 
+## 70 procent prepared 
+## 80 procent prepared 
+## 90 procent prepared 
+## Number of variants for filtering: 526
+## Number of variants with > MAF: 355
+```
+
+```r
+dim(a)
+```
+
+```
+## [1] 355   4
+```
+Using a different MAF, the number of variants changes:
+
+```r
+ y <- SNP
+ reference <- "refNCBI"
+ MAF <- 0.7
+ a <- prepvar(y, MAF, reference)
+```
+
+```
+## 5 procent prepared 
+## 10 procent prepared 
+## 20 procent prepared 
+## 30 procent prepared 
+## 40 procent prepared 
+## 50 procent prepared 
+## 60 procent prepared 
+## 70 procent prepared 
+## 80 procent prepared 
+## 90 procent prepared 
+## Number of variants for filtering: 526
+## Number of variants with > MAF: 73
+```
+
+```r
+ dim(a)
+```
+
+```
+## [1] 73  4
+```
+And finally, non-specifying MAF:
+
+```r
+ rm(MAF)
+ y <- SNP
+ reference <- "refNCBI"
+ a <- prepvar(y,, reference) 
+```
+
+```
+## 5 procent prepared 
+## 10 procent prepared 
+## 20 procent prepared 
+## 30 procent prepared 
+## 40 procent prepared 
+## 50 procent prepared 
+## 60 procent prepared 
+## 70 procent prepared 
+## 80 procent prepared 
+## 90 procent prepared 
+## Number of variants for filtering: 526
+```
+
+```r
+ dim(a)
+```
+
+```
+## [1] 526   4
+```
+
+After this preparatory step, the actual filtering is done:
+
+```r
+vcfvar <- VCFfile(test, "V10", TRUE, "PASS")
+vcfvar
 ```
 
 ```
@@ -576,75 +667,66 @@ As demonstrated, this results in a difference of one row, due to the removal of 
 ## 177        chr1 1585642      T   Homozygous
 ## 178        chr1 1586752      C   Homozygous
 ```
-Important: before you read in the dbSNP file, you should remove the # in the header (before bin). If this is forgotten, an error will occur when reading in the file.
 
 ```r
-dim(SNP)
+a <- prepvar(y, 0.03, reference) 
 ```
 
 ```
-## [1] 472  26
-```
-After preprocessing the vcf file or using the CLC file directly and loading the file containing the databasevariants, the object containing the variants of interest (which is vcfvar in this case) can be filtered:
-
-```r
- x <- vcfvar
- y <- SNP
- reference <- "refNCBI"
- MAF <- 0.03
- a <-varfilter(x,y, MAF, reference)
-```
-
-```
+## 5 procent prepared 
+## 10 procent prepared 
+## 20 procent prepared 
+## 30 procent prepared 
+## 40 procent prepared 
+## 50 procent prepared 
+## 60 procent prepared 
+## 70 procent prepared 
+## 80 procent prepared 
+## 90 procent prepared 
 ## Number of variants for filtering: 526
 ## Number of variants with > MAF: 355
+```
+
+```r
+varfilter(vcfvar, a)
+```
+
+```
 ## Number of variants to be filtered: 6
 ## Number of variants from x after filtering retained: 1
-```
-
-```r
- dim(a)
-```
-
-```
-## [1] 1 4
-```
-
-```r
- a
 ```
 
 ```
 ##      Chromosome  Region Allele     Zygosity
 ## 1711       chr1 1581713      G Heterozygous
 ```
-Using a different MAF, the number of variants changes:
 
 ```r
- x <- vcfvar
- y <- SNP
- reference <- "refNCBI"
- MAF <- 0.7
- a <-varfilter(x,y, MAF, reference)
+a <- prepvar(y, 0.70, reference) 
 ```
 
 ```
+## 5 procent prepared 
+## 10 procent prepared 
+## 20 procent prepared 
+## 30 procent prepared 
+## 40 procent prepared 
+## 50 procent prepared 
+## 60 procent prepared 
+## 70 procent prepared 
+## 80 procent prepared 
+## 90 procent prepared 
 ## Number of variants for filtering: 526
 ## Number of variants with > MAF: 73
+```
+
+```r
+varfilter(vcfvar, a)
+```
+
+```
 ## Number of variants to be filtered: 6
 ## Number of variants from x after filtering retained: 5
-```
-
-```r
- dim(a)
-```
-
-```
-## [1] 5 4
-```
-
-```r
- a
 ```
 
 ```
@@ -655,37 +737,39 @@ Using a different MAF, the number of variants changes:
 ## 176        chr1 1585597      G   Homozygous
 ## 177        chr1 1585642      T   Homozygous
 ```
-And finally, non-specifying MAF:
 
 ```r
- x <- vcfvar
- y <- SNP
- reference <- "refNCBI"
- a <-varfilter(x,y,, reference)
+a <- prepvar(y,, reference) 
 ```
 
 ```
+## 5 procent prepared 
+## 10 procent prepared 
+## 20 procent prepared 
+## 30 procent prepared 
+## 40 procent prepared 
+## 50 procent prepared 
+## 60 procent prepared 
+## 70 procent prepared 
+## 80 procent prepared 
+## 90 procent prepared 
 ## Number of variants for filtering: 526
+```
+
+```r
+varfilter(vcfvar, a)
+```
+
+```
 ## Number of variants to be filtered: 6
 ## No variants left from x after filtering
-```
-
-```r
- dim(a)
-```
-
-```
-## [1] 0 4
-```
-
-```r
- a
 ```
 
 ```
 ## [1] Chromosome Region     Allele     Zygosity  
 ## <0 rows> (or 0-length row.names)
 ```
+The MAF used clearly affects the number of variants.
 
 # Variant filtering
 This section details on the main functions of the package: the variant filtering using different types of inheritance, penetrance and detectance. It can be broadly divided in two large sections: 
@@ -697,7 +781,7 @@ This division is based on the grouping unit that is required to be identical amo
 Before going into detail, a short explanation on penetrance and detectance, as it is used in these 4 functions:
 * Penetrance: 
     * mathematical: P(phenotype|genotype)
-    * words: the probability of seeing a certain phenotype, given genotype
+    * words: the probability of seeing a certain phenotype, given the genotype
     * calculation: the number of cases, divided by the sum of cases and the number of controls with the genotype but without the phenotype
     * It answers the question: if you have the mutation, what is the chance of you having the disease as well?
 * Detectance: 
@@ -1165,4 +1249,4 @@ Remark: *annot* or *CLCfile* should be used between *nRec/nDom* and *commonvar*
 ## VCF file
 ![](http://www.heupdysplasie.ugent.be/Mendelian/figure4vcf.png)
 
-Remark: *annot* or *CLCfile* should be used between *nRec/nDom* and *commonvar*
+Remark: *annot* should be used between *nRec/nDom* and *commonvar*

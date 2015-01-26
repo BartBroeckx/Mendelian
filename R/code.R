@@ -1,3 +1,4 @@
+
 ############################################
 # NUCLEOTIDE LEVEL                         #
 # 1) Dominant (function: nDOM)             #
@@ -1122,3 +1123,89 @@ commonvar <- function(x, group){
 #' test documentation
 #' An example of a VCF file.
 "test"
+
+
+#' Preparing variant database (parallel).
+#'
+#'@description prepvarpar is used to prepare a large variant database for 
+#'  further filtering with varfilter.
+#'@param y the data frame containing the variants.
+#'@param MAF optional numeric, the MAF of the non-reference variants to be 
+#'  retained for filtering.
+#'@param reference the column containing the reference sequence in the y data 
+#'  frame.
+#'@param nproc the number of cores or workers used for parallel computing.
+#'@details This function prepares the variants from a large database like dbSNP
+#'  to be used for filtering variants in cases. MAF is optional and specifies a 
+#'  minimum allele frequency for the database variants to be retained for 
+#'  variant filtering. The input of y should be the standard output of the UCSC 
+#'  table browser ("all fields from selected table"). This function allows 
+#'  parallel computing, leading to substantial time improvement when entire 
+#'  databases are used. If parallel computing is not necessary or not possible, 
+#'  use prepvar.Prior to running this function, call function registerDoParallel
+#'  from the doParallel package to permit parallel computing.
+#'  @examples
+#' #library(doParallel)
+#' #registerDoParallel()
+#' # nproc <-getDoParWorkers()
+#' # a <-prepvarpar(SNP, 0.03,"refNCBI", 1)
+prepvarpar <- function(y, MAF, reference, nproc){
+  "%dopar%" <- NA
+  rm("%dopar%")
+  if (missing(y) | missing(reference)) {
+    stop("specify y and reference")}
+  y <- y[, -c(1, 4:7, 10:22, 24, 26)]
+  y[, 2] <- y[, 2] + 1
+  indic <-rep(1:nproc, length.out=nrow(y))
+  indic <- sort(indic)
+  indic <- as.factor(indic)
+  y <- cbind(y,indic)
+  splits <- iterators::isplit(y,y$indic)
+  subsety=NULL
+  result<- foreach::foreach(subsety=splits, .combine='rbind') %dopar% {
+    filtering <- data.frame()
+    for (i in 1:nrow(subsety$value)) {
+      subset <- subsety$value[i, ]
+      allele <- unlist(strsplit(as.character(subset[, "alleles"]), 
+                                ","))
+      id <- which(allele != subset[, reference])
+      nonrefallele <- allele[id]
+      allelefreq <- unlist(strsplit(as.character(subset[, "alleleFreqs"]), 
+                                    ","))
+      nonreffreq <- allelefreq[id]
+      nonreffreq <- as.numeric(nonreffreq)
+      nrep <- length(nonreffreq)
+      subset <- subset[rep(seq_len(nrow(subset)), nrep), c(1:2)]
+      subsetend <- cbind(subset, nonrefallele, nonreffreq)
+      filtering <- rbind(filtering, subsetend)
+    }
+    prelist <-list(value=filtering)
+    presubset<- subsety[-1]
+    result <- c(prelist,presubset)
+  }
+  empty=NULL
+  for (i in 1:nproc) {
+    prepdata<-as.data.frame(result[[i]])
+    empty <- rbind(empty,prepdata)
+    
+  }
+  filtering<- empty 
+  Text <- paste("Number of variants for filtering: ", nrow(filtering), 
+                "\n", sep = "")
+  cat(Text)
+  if (!missing(MAF)) {
+    id <- which(filtering$nonreffreq >= MAF)
+    if (length(id) >= 1) {
+      filtering <- filtering[id, ]
+      Text <- paste("Number of variants with > MAF: ", 
+                    nrow(filtering), "\n", sep = "")
+      cat(Text)
+    }
+    else if (length(id) < 1) {
+      Text <- paste("No variants for filtering retained!", 
+                    "\n", sep = "")
+      cat(Text)
+    }
+  }
+  filtering
+}
