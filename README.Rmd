@@ -1,0 +1,14 @@
+---
+output:
+  md_document:
+    variant: markdown_github
+---
+Mendelian is an R package that can be used to filter sequencing variants. It enables filtering for both dominant and recessive traits, with a wide variety of options (including reduced penetrance and detectance). 
+
+This package can be installed from github using: 
+```{r, echo = FALSE}
+require(devtools)
+devtools::install_github("BartBroeckx/Mendelian", build_vignettes=TRUE)
+```
+
+Detailed examples are available in the vignette.
