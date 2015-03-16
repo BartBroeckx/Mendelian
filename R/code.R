@@ -373,11 +373,11 @@ gDom <- function(x,y)
     Text <- paste("Number of controls: ", length(y), "\n", sep="")
     cat(Text)
     # followed by y vector (controls!!)
-    output=NULL
+    outputy=NULL
     for (i in 1:length(y)){
       nameValuey<-get(y[[i]])
       nameValuey$comb <-paste(nameValuey$Chromosome,nameValuey$Region, nameValuey$Allele, sep=" ")
-      outputy <-rbind(output, nameValuey)
+      outputy <-rbind(outputy, nameValuey)
       Text <- paste("Finished control",i, "\n" )
       cat(Text)
     }
