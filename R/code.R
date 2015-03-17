@@ -459,11 +459,11 @@ gDom <- function(x,y)
     cat(Text)
     Text <- paste("Number of genes retained: ", nrow(as.data.frame(table(r$Group))), "\n", sep="")
     cat(Text)
-  } else {
+    r
+    } else {
     Text <- "None retained"
     cat(Text)}
-  r
-}
+  }
 
 ##############################################
 # Function 3: gRec
