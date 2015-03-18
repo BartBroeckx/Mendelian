@@ -420,6 +420,8 @@ gDom <- function(x,y)
     }
     # intermezzo: grouping
     Freq <-as.data.frame(table(nameValue[,"group"]), stringsAsFactors=FALSE)
+    id <- which(Freq$Freq >=1)
+    Freq <- Freq[id,]
     output <-c(output, Freq$Var1)
     # variantsretained
     nameValue$overall <-paste(nameValue$comb, nameValue[,"group"], sep=" / ")
