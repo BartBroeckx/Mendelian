@@ -1,11 +1,10 @@
 Package: Mendelian
-Title: Variant analysis for Mendelian disorders
+Title: Variant Analysis for Mendelian Disorders
 Version: 0.1
 Authors@R: person("Broeckx", "Bart", email= "bart.broeckx@ugent.be",
     role=c("aut","cre"))
-Description: This package allows the processing of variants for
-    Mendelian disorders for both human
-    and other species for a wide variety of inheritance models.
+Description: Processing of variants for Mendelian disorders for both 
+    human and other species for a wide variety of inheritance models.
 Depends: 
     R (>= 3.1.0)
 License: GPL-2
