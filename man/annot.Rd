@@ -30,6 +30,10 @@ This function can be used to annotate data frames. For further
  Workbench and VCF files (after VCFfile) can be processed. If a variant can
  be allocated to >1 group (a gene, exon or other), the variant information is
  spread over n rows (with n the number of groups).
+
+ If the file originates from the CLC genomics workbench (directly or after
+ processing with nDom or nRec), always specify CLC is TRUE. This is important
+ as CLC specifies chromosomal location for MNVs in a different way than VCF.
 }
 \examples{
 data(CLCfile1)

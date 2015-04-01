@@ -199,6 +199,7 @@ annot <- function(x, y, type, nomatch, CLC){
   if (missing(x) | missing(y) | missing(type)){
     stop("specify x, y and type")
   } else {
+    # preparatory phase 
     if  (CLC == TRUE){
       
       idregion <-grep("[:^:]", x$Region)
@@ -215,6 +216,7 @@ annot <- function(x, y, type, nomatch, CLC){
       }
       
     }
+    
     x[,1]<-as.factor(x[,1])
     x[,2]<- as.numeric(x[,2])
     
@@ -222,7 +224,6 @@ annot <- function(x, y, type, nomatch, CLC){
     if (type == "BED") {
       y[,2]<- y[,2] + 1 
     }
-    
     output <- data.frame()
     for (i in 1:nrow(x)){
       linei <- x[i,]
@@ -246,10 +247,11 @@ annot <- function(x, y, type, nomatch, CLC){
             }
           }
         }
-        if (length(id>0)){
+        
+        if (length(id)>0){
           annotation<-as.vector(unlist(subset[id, 4]))
           nrep <- length(annotation)  
-          replicated<- linei[rep(linei[,1],nrep),]
+          replicated<- linei[rep(seq_len(nrow(linei)),nrep),]
           result <-cbind(replicated, annotation)
           
           output <-rbind(output, result)
@@ -278,10 +280,10 @@ annot <- function(x, y, type, nomatch, CLC){
             }
           }        
         }
-        if (length(id>0)){
+        if (length(id)>0){
           annotation<-as.vector(unlist(subset[id, 10]))
           nrep <- length(annotation)  
-          replicated<- linei[rep(linei[,1],nrep),]
+          replicated<- linei[rep(seq_len(nrow(linei)),nrep),]
           result <-cbind(replicated, annotation)
         } else {
           if (nomatch == "TRUE"){
@@ -880,8 +882,11 @@ gDom <- function(x,y)
 
 ```
 ```{r, echo=FALSE}
-gRec <- function(x,y)
+gRec <- function(x,y,list)
 { # first some general remarks
+  if (missing(list)) {
+    stop("specify list")
+  }
   Text <- paste("Number of cases: ", length(x), "\n", sep="")
   cat(Text)
   if (!missing(y)){
@@ -896,6 +901,9 @@ gRec <- function(x,y)
       id <- which(nameValuey$Zygosity =="Homozygous")
       homozygous <- unique(nameValuey[id, "comb"])
       heterozygous <- nameValuey[-id,]
+      # following line has been added
+      heterozygous$group <- factor(heterozygous$group)
+      # previous line has been added
       pairwisecontrol = NULL
       for (z in 1:length(levels(heterozygous[, "group"]))) {
         Test <- subset(heterozygous[, "comb"], heterozygous[,"group"]==levels(heterozygous[,"group"])[z])
@@ -937,6 +945,8 @@ gRec <- function(x,y)
   # first x-vector (cases!!)
   output=NULL
   variantoutput=NULL
+  pairwisecombinations <- vector(mode="list", length=length(x))
+  names(pairwisecombinations) <- x
   for (s in 1:length(x)){
     nameValue<-get(x[[s]])
     nameValue$comb <-paste(nameValue$Chromosome,nameValue$Region, nameValue$Allele, sep=" ")
@@ -958,8 +968,12 @@ gRec <- function(x,y)
     
     # second filtering: filter out pairwise combinations
     # generate pairwise combn
+    
     if (!missing(y) && nrow(Freqhetero) != "0") { 
       pairwisecase = NULL
+      # the following line has been added:
+      hetero$group<- factor(hetero$group)
+      # the previous line has been added
       for (t in 1:length(levels(hetero[, "group"]))) {
         Test <- subset(hetero[, "comb"], hetero[,"group"]==levels(hetero[,"group"])[t])
         if (length(Test)>1){
@@ -976,17 +990,21 @@ gRec <- function(x,y)
         hetero <- hetero[id,]
       } else if(length(id) > 0) {
         if (length(unique(id)) != length(pairwisecase)) {
-          pairwisecase<- pairwisecase[-id,]
+          # the next line comma has been removed
+          pairwisecase<- pairwisecase[-id]
+          # the previous line comma has been removed
           heteroretained <- unique(unlist(strsplit(pairwisecase, " / ")))
           id <- which(hetero$comb %in% heteroretained)
           hetero <- hetero[id,]
-        } else if (length(id) == length(pairwisecase)){
+        } else if (length(unique(id)) == length(pairwisecase)){
           hetero=NULL
+          pairwisecase <- "none"
         }
       }
     }
     endvariants <-rbind(homo, hetero)
-    
+    if (!missing(y) && nrow(Freqhetero) != "0") {
+      pairwisecombinations[[s]] <- pairwisecase }
     
     
     # followed by grouping per "gene" (defined as group)
@@ -1040,11 +1058,12 @@ gRec <- function(x,y)
   id <-which(Freq$Freq >= level)
   if (length(id) > 0){
     q <-Freq[id,"output"]
-    r <-as.data.frame(str_split_fixed(variants[,1]," / ",2), stringsAsFactors=FALSE) 
+    r <-as.data.frame(stringr::str_split_fixed(variants[,1]," / ",2), stringsAsFactors=FALSE) 
     
     id <- which(r[,2] %in% q)
     r <- r[id,]
-    r<-cbind(as.data.frame(str_split_fixed(r[,1]," ",3), stringsAsFactors=FALSE),r[,2]) 
+    filteringpairwisecombinations<- r[,1]
+    r<-cbind(as.data.frame(stringr::str_split_fixed(r[,1]," ",3), stringsAsFactors=FALSE),r[,2]) 
     r <- cbind(r,variants[id,"Freq"])
     colnames(r) <- c("Chromosome", "Region", "Allele", "Group", "Number of samples")
     r
@@ -1052,10 +1071,42 @@ gRec <- function(x,y)
     cat(Text)
     Text <- paste("Number of genes retained: ", nrow(as.data.frame(table(r$Group))), "\n", sep="")
     cat(Text)
+    
+    if (list == "TRUE" && !missing(y) && nrow(Freqhetero) != "0"){
+      resultlist <- vector(mode="list", length=length(pairwisecombinations)+1)
+      resultlist[[1]] <- r
+      
+      varend <- vector(mode="list", length=length(x))
+      
+      for (i in 1:length(pairwisecombinations)){
+        var<-pairwisecombinations[[i]]
+        vardef=NULL
+        for (w in 1:length(var)){
+          varret<- var[w]
+          substr<-unlist(strsplit(varret, " / "))
+          presentone<-substr[1] %in% filteringpairwisecombinations
+          presenttwo <-substr[2] %in% filteringpairwisecombinations
+          if (presentone == TRUE | presenttwo == TRUE) {
+            vardef <- c(vardef,varret)
+          }
+        }
+        if (length(vardef) > 0) {
+          varend[[i]] <- vardef
+        } else {
+          varend[[i]] <- "none" 
+        }
+      }
+      
+      resultlist[2:length(resultlist)] <- varend
+      allnames<- c("endresult", names(pairwisecombinations))
+      names(resultlist)<- allnames
+      resultlist
+      
+    } else if (list == "FALSE" | missing(y)) {r }
   } else {
     Text <- "None retained"
     cat(Text)}
-  r
+  
 }
 
 
@@ -1242,7 +1293,7 @@ output
 10       chr1 758487^758488      G ENSCAFT00000000011                 1
 
 
-output <- gRec(c("CLCfile1proc","CLCfile2proc"))
+output <- gRec(c("CLCfile1proc","CLCfile2proc"),,FALSE)
 
 Number of cases: 2
 Finished case 1 
@@ -1292,7 +1343,7 @@ output
 3       chr1      758487^758488      G ENSCAFT00000000011                 1
 
 
-output <- gRec("CLCfile1proc", "CLCfile2proc" )
+output <- gRec("CLCfile1proc", "CLCfile2proc", FALSE )
 
 Number of cases: 1
 Number of controls: 1

@@ -4,12 +4,15 @@
 \alias{gRec}
 \title{Variant filtering with recessive inheritance considering functional unit.}
 \usage{
-gRec(x, y)
+gRec(x, y, list)
 }
 \arguments{
 \item{x}{the case(s).}
 
 \item{y}{optional, the control(s).}
+
+\item{list}{logical, specify whether a list should be returned (TRUE) or not
+(false).}
 }
 \description{
 gRec should be used to filter variants under a recessive mode of
@@ -29,13 +32,20 @@ gRec checks for common functional units within cases. For a unit to
 
  Before using this function, each file from each case should have been
  processed by CLCfile or VCFfile with annot.
+
+ The parameter list allows you to specify whether the output should contain
+ only the retained variants and genes (FALSE) only or together with the
+ compound heterozygous variants per sample (TRUE). This parameter is only
+ useful when you have both case(s) and control(s) and when compound
+ heterozygous variants were present in the controls. For further processing
+ with commonvar, list should be FALSE.
 }
 \examples{
 CLCfile1proc <-CLCfile(CLCfile1, "Coding.region.change", TRUE, "; ")
 CLCfile2proc <-CLCfile(CLCfile2, "Coding.region.change", TRUE, "; ")
-output <- gRec("CLCfile1proc", "CLCfile2proc")
+output <- gRec("CLCfile1proc", "CLCfile2proc", TRUE)
 output
-output <- gRec(c("CLCfile1proc","CLCfile2proc"))
+output <- gRec(c("CLCfile1proc","CLCfile2proc"),, TRUE)
 output
 }
 \author{

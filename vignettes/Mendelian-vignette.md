@@ -1,7 +1,7 @@
 ---
 title: "Mendelian vignette"
 author: "Bart Broeckx"
-date: "2015-01-26"
+date: "2015-04-01"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Mendelian-vignette}
@@ -1063,7 +1063,7 @@ output
 10       chr1 758487^758488      G ENSCAFT00000000011                 1
 
 
-output <- gRec(c("CLCfile1proc","CLCfile2proc"))
+output <- gRec(c("CLCfile1proc","CLCfile2proc"),,FALSE)
 
 Number of cases: 2
 Finished case 1 
@@ -1114,7 +1114,7 @@ output
 3       chr1      758487^758488      G ENSCAFT00000000011                 1
 
 
-output <- gRec("CLCfile1proc", "CLCfile2proc" )
+output <- gRec("CLCfile1proc", "CLCfile2proc", FALSE )
 
 Number of cases: 1
 Number of controls: 1
@@ -1245,7 +1245,7 @@ In conclusion, the functions presented here can be used in almost every X-linked
 ## CLC file
 ![](http://www.heupdysplasie.ugent.be/Mendelian/figure3clc.png)
 
-Remark: *annot* or *CLCfile* should be used between *nRec/nDom* and *commonvar*
+Remark: *annot* should be used between *nRec/nDom* and *commonvar*
 ## VCF file
 ![](http://www.heupdysplasie.ugent.be/Mendelian/figure4vcf.png)
 

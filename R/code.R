@@ -476,6 +476,8 @@ gDom <- function(x,y)
 #'  considered.
 #'@param x the case(s).
 #'@param y optional, the control(s).
+#'@param list logical, specify whether a list should be returned (TRUE) or not
+#'  (false).
 #'@details gRec checks for common functional units within cases. For a unit to 
 #'  be retained, it should have at least one homozygous non-reference variant or
 #'  at least be compound heterozygous.  If variants from control(s) are present,
@@ -488,17 +490,26 @@ gDom <- function(x,y)
 #'  
 #'  Before using this function, each file from each case should have been 
 #'  processed by CLCfile or VCFfile with annot.
+#'  
+#'  The parameter list allows you to specify whether the output should contain
+#'  only the retained variants and genes (FALSE) only or together with the
+#'  compound heterozygous variants per sample (TRUE). This parameter is only
+#'  useful when you have both case(s) and control(s) and when compound
+#'  heterozygous variants were present in the controls. For further processing
+#'  with commonvar, list should be FALSE.
 #'@author Bart Broeckx
 #' @examples 
 #' CLCfile1proc <-CLCfile(CLCfile1, "Coding.region.change", TRUE, "; ")
 #' CLCfile2proc <-CLCfile(CLCfile2, "Coding.region.change", TRUE, "; ")
-#'output <- gRec("CLCfile1proc", "CLCfile2proc")
+#'output <- gRec("CLCfile1proc", "CLCfile2proc", TRUE)
 #'output
-#'output <- gRec(c("CLCfile1proc","CLCfile2proc"))
+#'output <- gRec(c("CLCfile1proc","CLCfile2proc"),, TRUE)
 #'output
-
-gRec <- function(x,y)
+gRec <- function(x,y,list)
 { # first some general remarks
+  if (missing(list)) {
+    stop("specify list")
+  }
   Text <- paste("Number of cases: ", length(x), "\n", sep="")
   cat(Text)
   if (!missing(y)){
@@ -513,6 +524,9 @@ gRec <- function(x,y)
       id <- which(nameValuey$Zygosity =="Homozygous")
       homozygous <- unique(nameValuey[id, "comb"])
       heterozygous <- nameValuey[-id,]
+      # following line has been added
+      heterozygous$group <- factor(heterozygous$group)
+      # previous line has been added
       pairwisecontrol = NULL
       for (z in 1:length(levels(heterozygous[, "group"]))) {
         Test <- subset(heterozygous[, "comb"], heterozygous[,"group"]==levels(heterozygous[,"group"])[z])
@@ -554,6 +568,8 @@ gRec <- function(x,y)
   # first x-vector (cases!!)
   output=NULL
   variantoutput=NULL
+  pairwisecombinations <- vector(mode="list", length=length(x))
+  names(pairwisecombinations) <- x
   for (s in 1:length(x)){
     nameValue<-get(x[[s]])
     nameValue$comb <-paste(nameValue$Chromosome,nameValue$Region, nameValue$Allele, sep=" ")
@@ -575,8 +591,12 @@ gRec <- function(x,y)
     
     # second filtering: filter out pairwise combinations
     # generate pairwise combn
+    
     if (!missing(y) && nrow(Freqhetero) != "0") { 
       pairwisecase = NULL
+      # the following line has been added:
+      hetero$group<- factor(hetero$group)
+      # the previous line has been added
       for (t in 1:length(levels(hetero[, "group"]))) {
         Test <- subset(hetero[, "comb"], hetero[,"group"]==levels(hetero[,"group"])[t])
         if (length(Test)>1){
@@ -593,17 +613,21 @@ gRec <- function(x,y)
         hetero <- hetero[id,]
       } else if(length(id) > 0) {
         if (length(unique(id)) != length(pairwisecase)) {
-          pairwisecase<- pairwisecase[-id,]
+          # the next line comma has been removed
+          pairwisecase<- pairwisecase[-id]
+          # the previous line comma has been removed
           heteroretained <- unique(unlist(strsplit(pairwisecase, " / ")))
           id <- which(hetero$comb %in% heteroretained)
           hetero <- hetero[id,]
-        } else if (length(id) == length(pairwisecase)){
+        } else if (length(unique(id)) == length(pairwisecase)){
           hetero=NULL
+          pairwisecase <- "none"
         }
       }
     }
     endvariants <-rbind(homo, hetero)
-    
+    if (!missing(y) && nrow(Freqhetero) != "0") {
+      pairwisecombinations[[s]] <- pairwisecase }
     
     
     # followed by grouping per "gene" (defined as group)
@@ -661,6 +685,7 @@ gRec <- function(x,y)
     
     id <- which(r[,2] %in% q)
     r <- r[id,]
+    filteringpairwisecombinations<- r[,1]
     r<-cbind(as.data.frame(stringr::str_split_fixed(r[,1]," ",3), stringsAsFactors=FALSE),r[,2]) 
     r <- cbind(r,variants[id,"Freq"])
     colnames(r) <- c("Chromosome", "Region", "Allele", "Group", "Number of samples")
@@ -669,11 +694,44 @@ gRec <- function(x,y)
     cat(Text)
     Text <- paste("Number of genes retained: ", nrow(as.data.frame(table(r$Group))), "\n", sep="")
     cat(Text)
+    
+    if (list == "TRUE" && !missing(y) && nrow(Freqhetero) != "0"){
+      resultlist <- vector(mode="list", length=length(pairwisecombinations)+1)
+      resultlist[[1]] <- r
+      
+      varend <- vector(mode="list", length=length(x))
+      
+      for (i in 1:length(pairwisecombinations)){
+        var<-pairwisecombinations[[i]]
+        vardef=NULL
+        for (w in 1:length(var)){
+          varret<- var[w]
+          substr<-unlist(strsplit(varret, " / "))
+          presentone<-substr[1] %in% filteringpairwisecombinations
+          presenttwo <-substr[2] %in% filteringpairwisecombinations
+          if (presentone == TRUE | presenttwo == TRUE) {
+            vardef <- c(vardef,varret)
+          }
+        }
+        if (length(vardef) > 0) {
+          varend[[i]] <- vardef
+        } else {
+          varend[[i]] <- "none" 
+        }
+      }
+      
+      resultlist[2:length(resultlist)] <- varend
+      allnames<- c("endresult", names(pairwisecombinations))
+      names(resultlist)<- allnames
+      resultlist
+      
+    } else if (list == "FALSE" | missing(y)) {r }
   } else {
     Text <- "None retained"
     cat(Text)}
-  r
+  
 }
+
 
 
 ##############################################
@@ -786,6 +844,10 @@ VCFfile <-function(x,sample,filter,value){
 #'  Workbench and VCF files (after VCFfile) can be processed. If a variant can 
 #'  be allocated to >1 group (a gene, exon or other), the variant information is
 #'  spread over n rows (with n the number of groups).
+#'  
+#'  If the file originates from the CLC genomics workbench (directly or after
+#'  processing with nDom or nRec), always specify CLC is TRUE. This is important
+#'  as CLC specifies chromosomal location for MNVs in a different way than VCF.
 #'@author Bart Broeckx
 #'  @examples data(CLCfile1)
 #'  data(genBED)
@@ -798,6 +860,7 @@ annot <- function(x, y, type, nomatch, CLC){
   if (missing(x) | missing(y) | missing(type)){
     stop("specify x, y and type")
   } else {
+    # preparatory phase 
     if  (CLC == TRUE){
       
       idregion <-grep("[:^:]", x$Region)
@@ -814,6 +877,7 @@ annot <- function(x, y, type, nomatch, CLC){
       }
       
     }
+    
     x[,1]<-as.factor(x[,1])
     x[,2]<- as.numeric(x[,2])
     
@@ -821,7 +885,6 @@ annot <- function(x, y, type, nomatch, CLC){
     if (type == "BED") {
       y[,2]<- y[,2] + 1 
     }
-    
     output <- data.frame()
     for (i in 1:nrow(x)){
       linei <- x[i,]
@@ -845,10 +908,11 @@ annot <- function(x, y, type, nomatch, CLC){
             }
           }
         }
-        if (length(id>0)){
+        
+        if (length(id)>0){
           annotation<-as.vector(unlist(subset[id, 4]))
           nrep <- length(annotation)  
-          replicated<- linei[rep(linei[,1],nrep),]
+          replicated<- linei[rep(seq_len(nrow(linei)),nrep),]
           result <-cbind(replicated, annotation)
           
           output <-rbind(output, result)
@@ -877,10 +941,10 @@ annot <- function(x, y, type, nomatch, CLC){
             }
           }        
         }
-        if (length(id>0)){
+        if (length(id)>0){
           annotation<-as.vector(unlist(subset[id, 10]))
           nrep <- length(annotation)  
-          replicated<- linei[rep(linei[,1],nrep),]
+          replicated<- linei[rep(seq_len(nrow(linei)),nrep),]
           result <-cbind(replicated, annotation)
         } else {
           if (nomatch == "TRUE"){
@@ -897,7 +961,6 @@ annot <- function(x, y, type, nomatch, CLC){
   
   output
 }
-
 
 #########################################
 #' Preparing variant database.
