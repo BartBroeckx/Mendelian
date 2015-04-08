@@ -377,6 +377,10 @@ gDom <- function(x,y)
     for (i in 1:length(y)){
       nameValuey<-get(y[[i]])
       nameValuey$comb <-paste(nameValuey$Chromosome,nameValuey$Region, nameValuey$Allele, sep=" ")
+      id <- which(duplicated(nameValuey$comb))
+      if (length(id) >0){
+        nameValuey <- nameValuey[-id,]
+      }
       outputy <-rbind(outputy, nameValuey)
       Text <- paste("Finished control",i, "\n" )
       cat(Text)
