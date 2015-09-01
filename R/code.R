@@ -898,18 +898,22 @@ annot <- function(x, y, type, nomatch, CLC){
         id <- which(linei[,2] >= subset[,2] & linei[,2] <= subset[,3]) 
         if  (CLC == TRUE){
           if (length(idregion) >=1 | length(idregion2) >=1 ){
+            if (length(idregion)>=1){ 
             for (f in 1:length(idregion)){
               if (i == idregion[f]){ 
                 linei[,2]<-originalregion[f]
                 
               }  
             }
+          }
+          if (length(idregion2)>=1){
             for (g in 1:length(idregion2)){
               if (i == idregion2[g]){ 
                 linei[,2]<-originalregion2[g]
                 
               }  
             }
+          }
           }
         }
         
@@ -931,18 +935,22 @@ annot <- function(x, y, type, nomatch, CLC){
         id <- which(linei[,2] >= subset[,4] & linei[,2] <= subset[,5]) 
         if  (CLC == TRUE){
           if (length(idregion) >=1 | length(idregion2) >=1 ){
+            if (length(idregion)>=1){ 
             for (f in 1:length(idregion)){
               if (i == idregion[f]){ 
                 linei[,2]<-originalregion[f]
                 
               }  
             }
-            for (g in 1:length(idregion2)){
+          }
+          if (length(idregion2)>=1){   
+          for (g in 1:length(idregion2)){
               if (i == idregion2[g]){ 
                 linei[,2]<-originalregion2[g]
                 
               }  
             }
+          }
           }        
         }
         if (length(id)>0){
