@@ -1,7 +1,7 @@
 ---
 title: "Mendelian vignette"
 author: "Bart Broeckx"
-date: "2015-04-01"
+date: "2015-10-27"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Mendelian-vignette}
@@ -776,24 +776,23 @@ This section details on the main functions of the package: the variant filtering
 * nDom and nRec
 * gDom and gRec
 
-This division is based on the grouping unit that is required to be identical amongst cases. The first two functions look at the nucleotide level: all cases should have the same nucleotide (except under a reduced penetrance). In the second group of functions, the cases are required to have an identical grouping unit (which is most often the same gene). The second group will always contain at least all the variants from the first group. A more detailed explanation can be found in the next sections. 
+This division is based on the grouping unit that is required to be identical amongst cases. The first two functions look at the nucleotide level: all cases should have the same nucleotide (except under a reduced detectance). In the second group of functions, the cases are required to have an identical grouping unit (which is most often the same gene). The second group will always contain at least all the variants from the first group. A more detailed explanation can be found in the next sections. 
 
 Before going into detail, a short explanation on penetrance and detectance, as it is used in these 4 functions:
-* Penetrance: 
-    * mathematical: P(phenotype|genotype)
-    * words: the probability of seeing a certain phenotype, given the genotype
-    * calculation: the number of cases, divided by the sum of cases and the number of controls with the genotype but without the phenotype
-    * It answers the question: if you have the mutation, what is the chance of you having the disease as well?
 * Detectance: 
     * mathematical: P(genotype|phenotype)
     * words: the probability of identifying a certain genotype, given the phenotype
     * calculation: the number of cases with the phenotype and the genotype, divided by the total number of cases.
     * It answers the question: if you have the disease, what is your genotype?
+* Penetrance: 
+    * mathematical: P(phenotype|genotype)
+    * words: the probability of seeing a certain phenotype, given the genotype
+    * calculation: the number of cases, divided by the sum of cases and the number of controls with the genotype but without the phenotype
+    * It answers the question: if you have the mutation, what is the chance of you having the disease as well?
     
+Important: the penetrance level is influenced by the detectance level chosen earlier. If the detectance is reduced (e.g genetic heterogeneity is present), the penetrance is calculated based on the number of individuals with a shared genotype.
 
 ## nDom and nRec
-
-
 
 The first two functions discussed are nDom and nRec. As mentioned earlier, their major difference with the other two functions is the grouping unit. Here, the nucleotide is considered to be the unit of interest. 
 
@@ -801,9 +800,13 @@ For nDom, every non-reference variant (homozygous or heterozygous) present in a 
 
 If the number of cases is > 1 and assuming 100% detectance, every case is assumed to have the same mutation, albeit homozygous for nRec and homo- or heterozygous for nDom. If the detectance drops however, not every person with a specific phenotype has necessarily the same mutation. It might be that the person is a phenocopy (= the organism's phenotype matches a phenotype which is determined by genetic factors, but in this case, it is enviromentaly induced) or that allelic heterogeneity (= the phenomenon in which different mutations at the same locus cause a similar phenotype) or locus heterogeneity (= the phenomenon in which mutations at different loci cause a similar phenotype) is present.
 
-Adding controls increases the complexity. Under 100% penetrance, for nDom, every control is assumed to not having the disease causing mutation. This has the nice consequence that, for nDom, every variant in every control can be used for filtering . For nRec, only homozygous variants present in the controls can be used for filtering variants in the cases. If the penetrance drops beneath 100%, this means that some of the controls might have the mutation, but are not sick. There are numerous reasons for a reduced penetrance: age-dependent penetrance (the individual has to be old enough to get the disease, e.g. degenerative myelopathy in the dog), exercise-dependent penetrance (the individual has to be pushed far enough to show the phenotype, e.g. exercise-induced collapse in the dog), ... This makes filtering a lot more difficult and requires the mutation to be present in a sufficient number of controls before it can be used for filtering.
+Adding controls increases the complexity. Under 100% penetrance, for nDom, every control is assumed to not having the disease causing mutation. This has the nice consequence that, for nDom, every variant in every control can be used for filtering. For nRec, only homozygous variants present in the controls can be used for filtering variants in the cases. If the penetrance drops beneath 100%, this means that some of the controls might have the mutation, but are not sick. There are numerous reasons for a reduced penetrance: age-dependent penetrance (the individual has to be old enough to get the disease, e.g. degenerative myelopathy in the dog), exercise-dependent penetrance (the individual has to be pushed far enough to show the phenotype, e.g. exercise-induced collapse in the dog), ... This makes filtering a lot more difficult and requires the mutation to be present in a sufficient number of controls before it can be used for filtering.
 
-Finally, two family options are available for both nRec and nDom, adding additional assumptions. In both cases, the parent(s) are assumed to be healthy  and the penetrance is assumed to be 100%. In addition, for nDom, the variant is assumed to be heterozygous in the progeny and not present in the parent(s). It is thus a reflection of the de novo mutation rate. For nRec, the variant is assumed to be homozygous in the progeny **and** heterozygous in the parent(s).
+Finally, two family options are available for both nRec and nDom, adding additional assumptions. The two family options are:
+* Ps-F: if both parents are available
+* P-F: if only one of the two parents is available
+
+In both cases, the parent(s) are assumed to be healthy  and the penetrance is assumed to be 100%. In addition, for nDom, the variant is assumed to be heterozygous in the progeny and not present in the parent(s). It is thus a reflection of the de novo mutation rate. For nRec, the variant is assumed to be homozygous in the progeny **and** heterozygous in the parent(s).
 
 Some examples:
 * nDom vs nRec with 2 cases:
@@ -886,18 +889,17 @@ Where nDom retains 5 variants, nRec only retains 2. Under 100% detectance, nDom 
 
 ```r
 output <- nDom("CLCfile1", "CLCfile2"  )
-
 Number of cases: 1
 Number of controls: 1
 Finished case 1 
-Finished control 1 
-Which penetrance level is required? 
-level (0): 100% (1/1+0)
-level (1): 50% (1/1+1)
-Choose level:0
 Which detectance level is required? 
 level (1): 100% (1/1)
 Choose level:1
+Finished control 1 
+Which penetrance level is required? 
+level (0): 100% (1/(1+0))
+level (1): 50% (1/(1+1))
+Choose level:0
 
 output
   Chromosome             Region Allele Number of Samples
@@ -907,18 +909,17 @@ output
 
 
 output <- nRec("CLCfile1", "CLCfile2")
-
 Number of cases: 1
 Number of controls: 1
 Finished case 1 
-Finished control 1 
-Which penetrance level is required? 
-level (0): 100% (1/1+0)
-level (1): 50% (1/1+1)
-Choose level:0
 Which detectance level is required? 
 level (1): 100% (1/1)
 Choose level:1
+Finished control 1 
+Which penetrance level is required? 
+level (0): 100% (1/(1+0))
+level (1): 50% (1/(1+1))
+Choose level:0
 
 output
   Chromosome             Region Allele Number of Samples
@@ -1092,18 +1093,17 @@ These functions report both the number of functional units (genes here) and the 
 
 ```r
 output <- gDom("CLCfile1proc", "CLCfile2proc" )
-
 Number of cases: 1
 Number of controls: 1
-Finished control 1 
-Which penetrance level is required? 
-level (0): 100% (1/1+0)
-level (1): 50% (1/1+1)
-Choose level:0
-Finished case 1 
 Which detectance level is required? 
 level (1): 100% (1/1)
 Choose level:1
+Finished control 1 
+Which penetrance level is required? 
+level (0): 100% (1/(1+0))
+level (1): 50% (1/(1+1))
+Choose level:0
+Finished case 1 
 Number of variants retained: 3
 Number of genes retained: 3
 
@@ -1115,18 +1115,17 @@ output
 
 
 output <- gRec("CLCfile1proc", "CLCfile2proc", FALSE )
-
 Number of cases: 1
 Number of controls: 1
-Finished control 1 
-Which penetrance level is required? 
-level (0): 100% (1/1+0)
-level (1): 50% (1/1+1)
-Choose level:0
-Finished case 1 
 Which detectance level is required? 
 level (1): 100% (1/1)
 Choose level:1
+Finished control 1 
+Which penetrance level is required? 
+level (0): 100% (1/(1+0))
+level (1): 50% (1/(1+1))
+Choose level:0
+Finished case 1 
 Number of variants retained: 2
 Number of genes retained: 2
 
@@ -1137,6 +1136,94 @@ output
 ```
 The same function with one control and one case returns 3 variants in 3 genes for gDom and 2 variants and 2 genes for gRec. 
 
+## Special example: reduced detectance and reduced penetrance
+Reduced penetrance and/or reduced detectance occur frequently, as discussed earlier. A practical example of how this comes in handy follows.
+
+First, four different files are prepared from the same starting file.
+
+```r
+# cases: 2 cases with same variant, one with a different variant
+case1 <-CLCfile1
+
+a[,c(1:5,9)]
+   Chromosome             Region      Type Reference Allele     Zygosity
+1        chr1             266523       SNV         G      T Heterozygous
+2        chr1             363618       SNV         A      G Heterozygous
+3        chr1             604894       SNV         A      G   Homozygous
+4        chr1             699873       SNV         G      A   Homozygous
+5        chr1      758487^758488 Insertion         -      G   Homozygous
+22       chr1           13397637       SNV         T      A Heterozygous
+23       chr1           13397669       SNV         C      T Heterozygous
+48       chr1 16806440..16806442  Deletion       GAG      -   Homozygous
+case2 <-CLCfile1
+case3 <-CLCfile1
+case3[1,5] <- "C"
+case3[,c(1:5,9)]
+   Chromosome             Region      Type Reference Allele     Zygosity
+1        chr1             266523       SNV         G      C Heterozygous
+2        chr1             363618       SNV         A      G Heterozygous
+3        chr1             604894       SNV         A      G   Homozygous
+4        chr1             699873       SNV         G      A   Homozygous
+5        chr1      758487^758488 Insertion         -      G   Homozygous
+22       chr1           13397637       SNV         T      A Heterozygous
+23       chr1           13397669       SNV         C      T Heterozygous
+48       chr1 16806440..16806442  Deletion       GAG      -   Homozygous
+
+# controls: 1 control
+control1 <-CLCfile1
+control1[1,5] <- "C"
+```
+
+Initially, only the cases are processed, including the case that has been changed (= case3). If we choose a detectance level of 100%, 7 of 8 variants are retained:
+
+
+```r
+nDom(c("case1","case2","case3"))
+Number of cases: 3
+Number of controls: 0 
+Finished case 1 
+Finished case 2 
+Finished case 3 
+Which detectance level is required? 
+level (1): 33.3333333333333% (1/3)
+level (2): 66.6666666666667% (2/3)
+level (3): 100% (3/3)
+Choose level:3
+  Chromosome             Region Allele Number of Samples
+1       chr1           13397637      A                 3
+2       chr1           13397669      T                 3
+3       chr1 16806440..16806442      -                 3
+4       chr1             363618      G                 3
+5       chr1             604894      G                 3
+6       chr1             699873      A                 3
+7       chr1      758487^758488      G                 3
+```
+If we allow the detectance to be reduced (level 2), all 8 variants are returned:
+
+```r
+nDom(c("case1","case2","case3"))
+Number of cases: 3
+Number of controls: 0 
+Finished case 1 
+Finished case 2 
+Finished case 3 
+Which detectance level is required? 
+level (1): 33.3333333333333% (1/3)
+level (2): 66.6666666666667% (2/3)
+level (3): 100% (3/3)
+Choose level:2
+  Chromosome             Region Allele Number of Samples
+1       chr1           13397637      A                 3
+2       chr1           13397669      T                 3
+3       chr1 16806440..16806442      -                 3
+4       chr1             266523      T                 **2**
+5       chr1             363618      G                 3
+6       chr1             604894      G                 3
+7       chr1             699873      A                 3
+8       chr1      758487^758488      G                 3
+```
+
+
 # Combining filters
 The final function was designed to further process the output of the four variant filter functions mentioned earlier. It assumes that all objects to be filtered, have the same phenotype (= input is assumed to be cases only, there is no room for controls) and that every object  has a column with an annotation. In addition, for the annotation to be useful, it should be the same for every single object: it does not make sense to group one object at the exon level and another object at the gene level. 
 
@@ -1145,38 +1232,35 @@ A practical example:
 
 ```r
 output <- nRec("CLCfile1", "CLCfile2"  )
-
 Number of cases: 1
 Number of controls: 1
 Finished case 1 
-Finished control 1 
-Which penetrance level is required? 
-level (0): 100% (1/1+0)
-level (1): 50% (1/1+1)
-Choose level:0
 Which detectance level is required? 
 level (1): 100% (1/1)
 Choose level:1
+Finished control 1 
+Which penetrance level is required? 
+level (0): 100% (1/(1+0))
+level (1): 50% (1/(1+1))
+Choose level:0
 
 output
   Chromosome             Region Allele Number of Samples
 1       chr1 16806440..16806442      -                 1
 2       chr1      758487^758488      G                 1
 
-
 output2 <- gDom("CLCfile1proc", "CLCfile2proc")
-
 Number of cases: 1
 Number of controls: 1
-Finished control 1 
-Which penetrance level is required? 
-level (0): 100% (1/1+0)
-level (1): 50% (1/1+1)
-Choose level:0
-Finished case 1 
 Which detectance level is required? 
 level (1): 100% (1/1)
 Choose level:1
+Finished control 1 
+Which penetrance level is required? 
+level (0): 100% (1/(1+0))
+level (1): 50% (1/(1+1))
+Choose level:0
+Finished case 1 
 Number of variants retained: 3
 Number of genes retained: 3
 
@@ -1199,15 +1283,17 @@ Annotoutput2
 * Now the objects are processed sufficiently for the *commonvar* function:
 
 ```r
-> x <- c("output2", "Annotoutput2")
-> group <- c("Group", "annotation")
-> a <-commonvar(x,group)
+x <- c("output2", "Annotoutput2")
+group <- c("Group", "annotation")
+
+a <-commonvar(x,group)
 Which detectance level is required? 
 level (1): 50% (1/2)
 level (2): 100% (2/2)
 Choose level:2
 2 groups are retained 
-> a 
+
+a
   Chromosome             Region Allele              Group Freq
 1       chr1 16806440..16806442      - ENSCAFT00000000149    2
 2       chr1      758487^758488      G ENSCAFT00000000011    2
@@ -1240,6 +1326,11 @@ In conclusion, the functions presented here can be used in almost every X-linked
 |nRec | homozygous variants | homozygous variants |
 |gDom | every gene with at least one variant | every variant |
 |gRec | gene with at least one homozygous variant or at least once compound heterozygous | homozygous variants and/or pairwise combination of heterozgyous variants within each gene |
+
+# Future plans:
+* integration of Mendelian with other packages (e.g. VariantAnnotation)
+* allow several separate analyses being run with one function call
+* further increase the flexibility and options available in each function
 
 # Flowcharts
 ## CLC file
