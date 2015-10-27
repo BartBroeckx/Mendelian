@@ -29,7 +29,6 @@
 #' output
 #' 
 
-
 nDom <- function(x,y,family)
 { # general prints
   Text <- paste("Number of cases: ", length(x), "\n", sep="")
@@ -62,7 +61,17 @@ nDom <- function(x,y,family)
     cat(Text)
   }
   Freq <-as.data.frame(table(output$comb), stringsAsFactors=FALSE)
-  
+  # which detectance level is required?
+  if (missing(family)) {
+    Text <- paste("Which detectance level is required?", "\n" )
+    cat(Text)
+    for (i in 1:length(x)) {
+      Text <- paste("level (",i,"): ", i/length(x)*100,"%"," (",i,"/",length(x),")","\n", sep="")
+      cat(Text)
+      
+    }
+    leveldetect <- as.numeric(readline("Choose level:"))
+  }
   # followed by y vector (controls!!)
   if (!missing(y) ) {
     output=NULL
@@ -80,8 +89,8 @@ nDom <- function(x,y,family)
       Text <- paste("Which penetrance level is required?", "\n" )
       cat(Text)
       for (i in 0:length(y)) {
-        Text <- paste("level (",i,"): ", round(length(x)/(length(x)+i)*100),
-                      "%", " (",length(x),"/",length(x),"+",i,")" ,"\n", sep="")
+        Text <- paste("level (",i,"): ", round(leveldetect/(leveldetect+i)*100),
+                      "%", " (",leveldetect,"/(",leveldetect,"+",i,"))" ,"\n", sep="")
         cat(Text)
       }
       level <- as.numeric(readline("Choose level:"))
@@ -97,18 +106,9 @@ nDom <- function(x,y,family)
                           if (length(id) > 0) {Freq<- Freq[-id,]}
     }
   }
-  # finally, which detectance level is required?
+  # application of previously chosen detectance level
   if (missing(family)) {
-    
-    Text <- paste("Which detectance level is required?", "\n" )
-    cat(Text)
-    for (i in 1:length(x)) {
-      Text <- paste("level (",i,"): ", i/length(x)*100,"%"," (",i,"/",length(x),")","\n", sep="")
-      cat(Text)
-      
-    }
-    level <- readline("Choose level:")
-    id <-which(Freq$Freq >= level)
+    id <-which(Freq$Freq >= leveldetect)
   } else if (family == "P-F" | family == "Ps-F") { 
     id <- which(nameValue$comb %in% Freq$Var1)
     Zygosity <-nameValue$Zygosity
@@ -131,6 +131,7 @@ nDom <- function(x,y,family)
   
   
 }
+
 
 ##############################################
 # function 2: nREC (require stringr!)
@@ -193,6 +194,19 @@ nRec <- function(x,y, family)
   
   Freq <-as.data.frame(table(output$comb), stringsAsFactors=FALSE)
   
+  # which detectance level is required?
+  if (missing(family)) {
+    
+    Text <- paste("Which detectance level is required?", "\n" )
+    cat(Text)
+    for (i in 1:length(x)) {
+      Text <- paste("level (",i,"): ", i/length(x)*100,"%"," (",i,"/",length(x),")","\n", sep="")
+      cat(Text)
+      
+    }
+    leveldetect <- as.numeric(readline("Choose level:"))
+  } 
+  
   # followed by y vector (controls!!)
   if (!missing(y) ) {
     output=NULL
@@ -212,8 +226,8 @@ nRec <- function(x,y, family)
       Text <- paste("Which penetrance level is required?", "\n" )
       cat(Text)
       for (i in 0:length(y)) {
-        Text <- paste("level (",i,"): ", round(length(x)/(length(x)+i)*100),
-                      "%", " (",length(x),"/",length(x),"+",i,")" ,"\n", sep="")
+        Text <- paste("level (",i,"): ", round(leveldetect/(leveldetect+i)*100),
+                      "%", " (",leveldetect,"/(",leveldetect,"+",i,"))" ,"\n", sep="")
         cat(Text)
       }
       level <- as.numeric(readline("Choose level:"))
@@ -232,18 +246,9 @@ nRec <- function(x,y, family)
     }
   }
   
-  # finally, which detectance level is required?
+  # application of detectance level
   if (missing(family)) {
-    
-    Text <- paste("Which detectance level is required?", "\n" )
-    cat(Text)
-    for (i in 1:length(x)) {
-      Text <- paste("level (",i,"): ", i/length(x)*100,"%"," (",i,"/",length(x),")","\n", sep="")
-      cat(Text)
-      
-    }
-    level <- readline("Choose level:")
-    id <-which(Freq$Freq >= level)
+    id <-which(Freq$Freq >= leveldetect)
   } else if (family == "P-F" ) { 
     output=NULL
     for (i in 1:length(y)){
@@ -281,6 +286,7 @@ nRec <- function(x,y, family)
     cat(Text)}
   
 }
+
 
 
 ############################################
@@ -372,6 +378,17 @@ gDom <- function(x,y)
   if (!missing(y)){
     Text <- paste("Number of controls: ", length(y), "\n", sep="")
     cat(Text)
+  }
+  # which detectance level is required?
+  
+  Text <- paste("Which detectance level is required?", "\n" )
+  cat(Text)
+  for (i in 1:length(x)) {
+    Text <- paste("level (",i,"): ", i/length(x)*100,"%"," (",i,"/",length(x),")","\n", sep="")
+    cat(Text)
+  }
+  leveldetect <- as.numeric(readline("Choose level:"))
+  if (!missing(y)){
     # followed by y vector (controls!!)
     outputy=NULL
     for (i in 1:length(y)){
@@ -390,8 +407,8 @@ gDom <- function(x,y)
     Text <- paste("Which penetrance level is required?", "\n" )
     cat(Text)
     for (i in 0:length(y)) {
-      Text <- paste("level (",i,"): ", round(length(x)/(length(x)+i)*100),
-                    "%", " (",length(x),"/",length(x),"+",i,")" ,"\n", sep="")
+      Text <- paste("level (",i,"): ", round(leveldetect/(leveldetect+i)*100),
+                    "%", " (",leveldetect,"/(",leveldetect,"+",i,"))" ,"\n", sep="")
       cat(Text)
     }
     levelpenet <- as.numeric(readline("Choose level:"))
@@ -437,20 +454,10 @@ gDom <- function(x,y)
   }
   Freq <- as.data.frame(table(output))
   variants <-as.data.frame(table(variantoutput))
-  # which detectance level is required?
-  
-  Text <- paste("Which detectance level is required?", "\n" )
-  cat(Text)
-  for (i in 1:length(x)) {
-    Text <- paste("level (",i,"): ", i/length(x)*100,"%"," (",i,"/",length(x),")","\n", sep="")
-    cat(Text)
-  }
-  level <- readline("Choose level:")
-  
-  
+  # application of detectance 
   # followed by final filtering
   
-  id <-which(Freq$Freq >= level)
+  id <-which(Freq$Freq >= leveldetect)
   if (length(id) > 0){
     q <-Freq[id,"output"]
     r <-as.data.frame(stringr::str_split_fixed(variants[,1]," / ",2), stringsAsFactors=FALSE) 
@@ -466,10 +473,11 @@ gDom <- function(x,y)
     Text <- paste("Number of genes retained: ", nrow(as.data.frame(table(r$Group))), "\n", sep="")
     cat(Text)
     r
-    } else {
+  } else {
     Text <- "None retained"
     cat(Text)}
-  }
+}
+
 
 ##############################################
 # Function 3: gRec
@@ -519,6 +527,17 @@ gRec <- function(x,y,list)
   if (!missing(y)){
     Text <- paste("Number of controls: ", length(y), "\n", sep="")
     cat(Text)
+  }
+  Text <- paste("Which detectance level is required?", "\n" )
+  cat(Text)
+  for (i in 1:length(x)) {
+    Text <- paste("level (",i,"): ", i/length(x)*100,"%"," (",i,"/",length(x),")","\n", sep="")
+    cat(Text)
+  }
+  leveldetect <- as.numeric(readline("Choose level:"))
+  
+  
+  if (!missing(y)){
     # followed by y vector (controls!!)
     homo=NULL
     hetero=NULL
@@ -552,8 +571,8 @@ gRec <- function(x,y,list)
     Text <- paste("Which penetrance level is required?", "\n" )
     cat(Text)
     for (i in 0:length(y)) {
-      Text <- paste("level (",i,"): ", round(length(x)/(length(x)+i)*100),
-                    "%", " (",length(x),"/",length(x),"+",i,")" ,"\n", sep="")
+      Text <- paste("level (",i,"): ", round(leveldetect/(leveldetect+i)*100),
+                    "%", " (",leveldetect,"/(",leveldetect,"+",i,"))" ,"\n", sep="")
       cat(Text)
     }
     levelpenet <- as.numeric(readline("Choose level:"))
@@ -669,20 +688,7 @@ gRec <- function(x,y,list)
   Freq <- as.data.frame(table(output))
   variants <-as.data.frame(table(variantoutput))
   
-  # which detectance level is required?
-  
-  Text <- paste("Which detectance level is required?", "\n" )
-  cat(Text)
-  for (i in 1:length(x)) {
-    Text <- paste("level (",i,"): ", i/length(x)*100,"%"," (",i,"/",length(x),")","\n", sep="")
-    cat(Text)
-  }
-  level <- readline("Choose level:")
-  
-  
-  # followed by final filtering
-  
-  id <-which(Freq$Freq >= level)
+  id <-which(Freq$Freq >= leveldetect)
   if (length(id) > 0){
     q <-Freq[id,"output"]
     r <-as.data.frame(stringr::str_split_fixed(variants[,1]," / ",2), stringsAsFactors=FALSE) 
@@ -735,7 +741,6 @@ gRec <- function(x,y,list)
     cat(Text)}
   
 }
-
 
 
 ##############################################
@@ -853,13 +858,26 @@ VCFfile <-function(x,sample,filter,value){
 #'  processing with nDom or nRec), always specify CLC is TRUE. This is important
 #'  as CLC specifies chromosomal location for MNVs in a different way than VCF.
 #'@author Bart Broeckx
-#'  @examples data(CLCfile1)
+#'  @examples 
+#'  data(test)
+#'  data(CLCfile1)
 #'  data(genBED)
+#'  # for VCF file
+#'  # general remark: make sure the chromosome is a character, not a factor: e.g.: 
+#'  test$V1<-as.character(test$V1)
+#'  # prepare the VCF file
+#'  out <-VCFfile(test,"V10", TRUE, "PASS")
+#'  # produce an annotated VCF file with all variants retained:
+#'  AnnotCLCfile1 <- annot(out, genBED, type="BED", nomatch=TRUE, CLC=FALSE)
+#'  # produce an annotated VCF file with all variants retained:
+#'  AnnotCLCfile2 <- annot(out, genBED, type="BED", nomatch=FALSE, CLC=FALSE)
 #'  # produces an annotated CLC file with all variants retained.
-#'  AnnotCLCfile1 <- annot(CLCfile1, genBED, type="BED", nomatch=TRUE, CLC=TRUE)
+#'  AnnotCLCfile3 <- annot(CLCfile1, genBED, type="BED", nomatch=TRUE, CLC=TRUE)
 #'  # produces an annotated CLC file with only the variants that were allocated 
 #'  # to a gene being retained.
-#'  AnnotCLCfile2 <- annot(CLCfile1, genBED, type="BED", nomatch=FALSE, CLC=TRUE)
+#'  AnnotCLCfile4 <- annot(CLCfile1, genBED, type="BED", nomatch=FALSE, CLC=TRUE)
+#'  
+
 annot <- function(x, y, type, nomatch, CLC){
   if (missing(x) | missing(y) | missing(type)){
     stop("specify x, y and type")
@@ -1112,12 +1130,11 @@ x
 #'output
 #'CLCfile1proc <-CLCfile(CLCfile1, "Coding.region.change", TRUE, "; ")
 #'CLCfile2proc <-CLCfile(CLCfile2, "Coding.region.change", TRUE, "; ")
-#'output2 <- gDom("CLCfile1proc", "CLCfile2proc") 
-#'output2
-#'Annotoutput2 <- annot(output,genBED, type="BED", nomatch=FALSE, CLC=TRUE)
-#'x <- c("output2", "Annotoutput2")
-#'group <- c("Group", "annotation")
-#'a <-commonvar(x,group)
+#'output2 <- gDom("CLCfile1proc", "CLCfile2proc")
+#'#Annotoutput2 <- annot(output,genBED, type="BED", nomatch=FALSE, CLC=TRUE)
+#'#x <- c("output2", "Annotoutput2")
+#'#group <- c("Group", "annotation")
+#'#a <-commonvar(x,group)
 
 commonvar <- function(x, group){
   

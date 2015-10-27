@@ -29,11 +29,10 @@ output
 CLCfile1proc <-CLCfile(CLCfile1, "Coding.region.change", TRUE, "; ")
 CLCfile2proc <-CLCfile(CLCfile2, "Coding.region.change", TRUE, "; ")
 output2 <- gDom("CLCfile1proc", "CLCfile2proc")
-output2
-Annotoutput2 <- annot(output,genBED, type="BED", nomatch=FALSE, CLC=TRUE)
-x <- c("output2", "Annotoutput2")
-group <- c("Group", "annotation")
-a <-commonvar(x,group)
+#Annotoutput2 <- annot(output,genBED, type="BED", nomatch=FALSE, CLC=TRUE)
+#x <- c("output2", "Annotoutput2")
+#group <- c("Group", "annotation")
+#a <-commonvar(x,group)
 }
 \author{
 Bart Broeckx

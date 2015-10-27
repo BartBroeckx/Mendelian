@@ -36,13 +36,23 @@ This function can be used to annotate data frames. For further
  as CLC specifies chromosomal location for MNVs in a different way than VCF.
 }
 \examples{
-data(CLCfile1)
+data(test)
+ data(CLCfile1)
  data(genBED)
+ # for VCF file
+ # general remark: make sure the chromosome is a character, not a factor: e.g.:
+ test$V1<-as.character(test$V1)
+ # prepare the VCF file
+ out <-VCFfile(test,"V10", TRUE, "PASS")
+ # produce an annotated VCF file with all variants retained:
+ AnnotCLCfile1 <- annot(out, genBED, type="BED", nomatch=TRUE, CLC=FALSE)
+ # produce an annotated VCF file with all variants retained:
+ AnnotCLCfile2 <- annot(out, genBED, type="BED", nomatch=FALSE, CLC=FALSE)
  # produces an annotated CLC file with all variants retained.
- AnnotCLCfile1 <- annot(CLCfile1, genBED, type="BED", nomatch=TRUE, CLC=TRUE)
+ AnnotCLCfile3 <- annot(CLCfile1, genBED, type="BED", nomatch=TRUE, CLC=TRUE)
  # produces an annotated CLC file with only the variants that were allocated
  # to a gene being retained.
- AnnotCLCfile2 <- annot(CLCfile1, genBED, type="BED", nomatch=FALSE, CLC=TRUE)
+ AnnotCLCfile4 <- annot(CLCfile1, genBED, type="BED", nomatch=FALSE, CLC=TRUE)
 }
 \author{
 Bart Broeckx
