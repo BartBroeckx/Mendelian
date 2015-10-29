@@ -1,7 +1,7 @@
 ---
 title: "Mendelian vignette"
 author: "Bart Broeckx"
-date: "2015-10-27"
+date: "2015-10-29"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Mendelian-vignette}
@@ -205,7 +205,7 @@ str(CLCfile1)
 All three objects contain 21 columns and 8 or 9 rows. Each row has columns specifying the chromosome, position ("region") and associated variant ("allele") found. 
 
 
-As we might expect, one variant might be associated with more than one functional unit. This is demonstrated at line 7 in CLCfile1 where the variant causes an amino-acid change in both ENSCAFT00000043665 and ENSCAFT00000048679:
+As we might expect, one variant might be associated with more than one functional unit. This is demonstrated at line 7 in CLCfile1 where the variant causes an amino acid change in both ENSCAFT00000043665 and ENSCAFT00000048679:
 
 
 ```r
@@ -436,7 +436,7 @@ CLCfile1[,c(1,2,18)]
 ## 48                           ENSCAFT00000000149:c.565_567delGAG
 ```
 
-As demonstrated, the annotation column added by *annot* yields identical results as the columns "Coding.region.change" or "Amino.acid.change". However, this is not necessarily the case. *Annot* does not take aminoacid changes into account, while both other columns do. It might be that a variant lies within the borders of an additional gene, but has no effect on the aminoacid composition of the protein. This will result in an additional row when *annot* is used. When comparing "Coding.region.change" or "Amino.acid.change" with the result of annot, annot should always result in at least the same number of rows (but might give more).
+As demonstrated, the annotation column added by *annot* yields identical results as the columns "Coding.region.change" or "Amino.acid.change". However, this is not necessarily the case. *Annot* does not take amino acid changes into account, while both other columns do. It might be that a variant lies within the borders of an additional gene, but has no effect on the amino acid composition of the protein. This will result in an additional row when *annot* is used. When comparing "Coding.region.change" or "Amino.acid.change" with the result of annot, annot should always result in at least the same number of rows (but might give more).
 
 In addition, although the previous example uses a "BED file", a "GTF" can also be used.
 
@@ -782,15 +782,13 @@ Before going into detail, a short explanation on penetrance and detectance, as i
 * Detectance: 
     * mathematical: P(genotype|phenotype)
     * words: the probability of identifying a certain genotype, given the phenotype
-    * calculation: the number of cases with the phenotype and the genotype, divided by the total number of cases.
     * It answers the question: if you have the disease, what is your genotype?
 * Penetrance: 
     * mathematical: P(phenotype|genotype)
     * words: the probability of seeing a certain phenotype, given the genotype
-    * calculation: the number of cases, divided by the sum of cases and the number of controls with the genotype but without the phenotype
     * It answers the question: if you have the mutation, what is the chance of you having the disease as well?
     
-Important: the penetrance level is influenced by the detectance level chosen earlier. If the detectance is reduced (e.g genetic heterogeneity is present), the penetrance is calculated based on the number of individuals with a shared genotype.
+Important: the penetrance level is influenced by the detectance level chosen earlier. If the detectance is reduced (e.g genetic heterogeneity is present), the penetrance is calculated based on the number of individuals with a shared genotype. Details on the calculation are provided in the accompanying paper. Importantly, each family should be analyzed separately.
 
 ## nDom and nRec
 
@@ -1137,7 +1135,7 @@ output
 The same function with one control and one case returns 3 variants in 3 genes for gDom and 2 variants and 2 genes for gRec. 
 
 ## Special example: reduced detectance and reduced penetrance
-Reduced penetrance and/or reduced detectance occur frequently, as discussed earlier. A practical example of how this comes in handy follows.
+Reduced penetrance and/or reduced detectance occurs frequently, as discussed earlier. How these situations can be handled practically is demonstrated with the following examples.
 
 First, four different files are prepared from the same starting file.
 
@@ -1145,7 +1143,7 @@ First, four different files are prepared from the same starting file.
 # cases: 2 cases with same variant, one with a different variant
 case1 <-CLCfile1
 
-a[,c(1:5,9)]
+case1[,c(1:5,9)]
    Chromosome             Region      Type Reference Allele     Zygosity
 1        chr1             266523       SNV         G      T Heterozygous
 2        chr1             363618       SNV         A      G Heterozygous
@@ -1222,6 +1220,56 @@ Choose level:2
 7       chr1             699873      A                 3
 8       chr1      758487^758488      G                 3
 ```
+
+A similar example can be used for penetrance:
+
+```r
+nDom(c("case1","case2"), "control1")
+Number of cases: 2
+Number of controls: 1
+Finished case 1 
+Finished case 2 
+Which detectance level is required? 
+level (1): 50% (1/2)
+level (2): 100% (2/2)
+Choose level:2
+Finished control 1 
+Which penetrance level is required? 
+level (0): 100% (2/(2+0))
+level (1): 67% (2/(2+1))
+Choose level:0
+  Chromosome Region Allele Number of Samples
+1       chr1 266523      T                 2
+```
+If we assume 100% penetrance, only one variant is retained (the one we manually changed in the control). If we allow a reduced penetrance, all eight variants are retained:
+
+```r
+nDom(c("case1","case2"), "control1")
+Number of cases: 2
+Number of controls: 1
+Finished case 1 
+Finished case 2 
+Which detectance level is required? 
+level (1): 50% (1/2)
+level (2): 100% (2/2)
+Choose level:2
+Finished control 1 
+Which penetrance level is required? 
+level (0): 100% (2/(2+0))
+level (1): 67% (2/(2+1))
+Choose level:1
+  Chromosome             Region Allele Number of Samples
+1       chr1           13397637      A                 2
+2       chr1           13397669      T                 2
+3       chr1 16806440..16806442      -                 2
+4       chr1             266523      T                 2
+5       chr1             363618      G                 2
+6       chr1             604894      G                 2
+7       chr1             699873      A                 2
+8       chr1      758487^758488      G                 2
+```
+
+
 
 
 # Combining filters

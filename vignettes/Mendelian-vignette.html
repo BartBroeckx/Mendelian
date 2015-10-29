@@ -367,7 +367,7 @@ renders all the variants, but with 22 rows now as region 1581713 contains two no
 
 <p>All three objects contain 21 columns and 8 or 9 rows. Each row has columns specifying the chromosome, position (&ldquo;region&rdquo;) and associated variant (&ldquo;allele&rdquo;) found. </p>
 
-<p>As we might expect, one variant might be associated with more than one functional unit. This is demonstrated at line 7 in CLCfile1 where the variant causes an amino-acid change in both ENSCAFT00000043665 and ENSCAFT00000048679:</p>
+<p>As we might expect, one variant might be associated with more than one functional unit. This is demonstrated at line 7 in CLCfile1 where the variant causes an amino acid change in both ENSCAFT00000043665 and ENSCAFT00000048679:</p>
 
 <pre><code class="r">CLCfile1[7,19]
 </code></pre>
@@ -570,7 +570,7 @@ nrow(AnnotCLCfile1)
 ## 48                           ENSCAFT00000000149:c.565_567delGAG
 </code></pre>
 
-<p>As demonstrated, the annotation column added by <em>annot</em> yields identical results as the columns &ldquo;Coding.region.change&rdquo; or &ldquo;Amino.acid.change&rdquo;. However, this is not necessarily the case. <em>Annot</em> does not take aminoacid changes into account, while both other columns do. It might be that a variant lies within the borders of an additional gene, but has no effect on the aminoacid composition of the protein. This will result in an additional row when <em>annot</em> is used. When comparing &ldquo;Coding.region.change&rdquo; or &ldquo;Amino.acid.change&rdquo; with the result of annot, annot should always result in at least the same number of rows (but might give more).</p>
+<p>As demonstrated, the annotation column added by <em>annot</em> yields identical results as the columns &ldquo;Coding.region.change&rdquo; or &ldquo;Amino.acid.change&rdquo;. However, this is not necessarily the case. <em>Annot</em> does not take amino acid changes into account, while both other columns do. It might be that a variant lies within the borders of an additional gene, but has no effect on the amino acid composition of the protein. This will result in an additional row when <em>annot</em> is used. When comparing &ldquo;Coding.region.change&rdquo; or &ldquo;Amino.acid.change&rdquo; with the result of annot, annot should always result in at least the same number of rows (but might give more).</p>
 
 <p>In addition, although the previous example uses a &ldquo;BED file&rdquo;, a &ldquo;GTF&rdquo; can also be used.</p>
 
@@ -889,7 +889,6 @@ vcfvar
 <ul>
 <li>mathematical: P(genotype|phenotype)</li>
 <li>words: the probability of identifying a certain genotype, given the phenotype</li>
-<li>calculation: the number of cases with the phenotype and the genotype, divided by the total number of cases.</li>
 <li>It answers the question: if you have the disease, what is your genotype?</li>
 </ul></li>
 <li>Penetrance: 
@@ -897,12 +896,11 @@ vcfvar
 <ul>
 <li>mathematical: P(phenotype|genotype)</li>
 <li>words: the probability of seeing a certain phenotype, given the genotype</li>
-<li>calculation: the number of cases, divided by the sum of cases and the number of controls with the genotype but without the phenotype</li>
 <li>It answers the question: if you have the mutation, what is the chance of you having the disease as well?</li>
 </ul></li>
 </ul>
 
-<p>Important: the penetrance level is influenced by the detectance level chosen earlier. If the detectance is reduced (e.g genetic heterogeneity is present), the penetrance is calculated based on the number of individuals with a shared genotype.</p>
+<p>Important: the penetrance level is influenced by the detectance level chosen earlier. If the detectance is reduced (e.g genetic heterogeneity is present), the penetrance is calculated based on the number of individuals with a shared genotype. Details on the calculation are provided in the accompanying paper. Importantly, each family should be analyzed separately.</p>
 
 <h2>nDom and nRec</h2>
 
@@ -1260,14 +1258,14 @@ output
 
 <h2>Special example: reduced detectance and reduced penetrance</h2>
 
-<p>Reduced penetrance and/or reduced detectance occur frequently, as discussed earlier. A practical example of how this comes in handy follows.</p>
+<p>Reduced penetrance and/or reduced detectance occurs frequently, as discussed earlier. How these situations can be handled practically is demonstrated with the following examples.</p>
 
 <p>First, four different files are prepared from the same starting file.</p>
 
 <pre><code class="r"># cases: 2 cases with same variant, one with a different variant
 case1 &lt;-CLCfile1
 
-a[,c(1:5,9)]
+case1[,c(1:5,9)]
    Chromosome             Region      Type Reference Allele     Zygosity
 1        chr1             266523       SNV         G      T Heterozygous
 2        chr1             363618       SNV         A      G Heterozygous
@@ -1341,6 +1339,53 @@ Choose level:2
 6       chr1             604894      G                 3
 7       chr1             699873      A                 3
 8       chr1      758487^758488      G                 3
+</code></pre>
+
+<p>A similar example can be used for penetrance:</p>
+
+<pre><code class="r">nDom(c(&quot;case1&quot;,&quot;case2&quot;), &quot;control1&quot;)
+Number of cases: 2
+Number of controls: 1
+Finished case 1 
+Finished case 2 
+Which detectance level is required? 
+level (1): 50% (1/2)
+level (2): 100% (2/2)
+Choose level:2
+Finished control 1 
+Which penetrance level is required? 
+level (0): 100% (2/(2+0))
+level (1): 67% (2/(2+1))
+Choose level:0
+  Chromosome Region Allele Number of Samples
+1       chr1 266523      T                 2
+</code></pre>
+
+<p>If we assume 100% penetrance, only one variant is retained (the one we manually changed in the control). If we allow a reduced penetrance, all eight variants are retained:</p>
+
+<pre><code class="r">nDom(c(&quot;case1&quot;,&quot;case2&quot;), &quot;control1&quot;)
+Number of cases: 2
+Number of controls: 1
+Finished case 1 
+Finished case 2 
+Which detectance level is required? 
+level (1): 50% (1/2)
+level (2): 100% (2/2)
+Choose level:2
+Finished control 1 
+Which penetrance level is required? 
+level (0): 100% (2/(2+0))
+level (1): 67% (2/(2+1))
+Choose level:1
+  Chromosome             Region Allele Number of Samples
+1       chr1           13397637      A                 2
+2       chr1           13397669      T                 2
+3       chr1 16806440..16806442      -                 2
+4       chr1             266523      T                 2
+5       chr1             363618      G                 2
+6       chr1             604894      G                 2
+7       chr1             699873      A                 2
+8       chr1      758487^758488      G                 2
 </code></pre>
 
 <h1>Combining filters</h1>

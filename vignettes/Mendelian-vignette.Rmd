@@ -154,7 +154,7 @@ CLCfile <- function(x,y, multiple,split)
   output
 }
 ```
-As we might expect, one variant might be associated with more than one functional unit. This is demonstrated at line 7 in CLCfile1 where the variant causes an amino-acid change in both ENSCAFT00000043665 and ENSCAFT00000048679:
+As we might expect, one variant might be associated with more than one functional unit. This is demonstrated at line 7 in CLCfile1 where the variant causes an amino acid change in both ENSCAFT00000043665 and ENSCAFT00000048679:
 
 ```{r}
 CLCfile1[7,19]
@@ -313,7 +313,7 @@ CLCfile1[,c(1,2,18)]
 
 ```
 
-As demonstrated, the annotation column added by *annot* yields identical results as the columns "Coding.region.change" or "Amino.acid.change". However, this is not necessarily the case. *Annot* does not take aminoacid changes into account, while both other columns do. It might be that a variant lies within the borders of an additional gene, but has no effect on the aminoacid composition of the protein. This will result in an additional row when *annot* is used. When comparing "Coding.region.change" or "Amino.acid.change" with the result of annot, annot should always result in at least the same number of rows (but might give more).
+As demonstrated, the annotation column added by *annot* yields identical results as the columns "Coding.region.change" or "Amino.acid.change". However, this is not necessarily the case. *Annot* does not take amino acid changes into account, while both other columns do. It might be that a variant lies within the borders of an additional gene, but has no effect on the amino acid composition of the protein. This will result in an additional row when *annot* is used. When comparing "Coding.region.change" or "Amino.acid.change" with the result of annot, annot should always result in at least the same number of rows (but might give more).
 
 In addition, although the previous example uses a "BED file", a "GTF" can also be used.
 
@@ -539,15 +539,13 @@ Before going into detail, a short explanation on penetrance and detectance, as i
 * Detectance: 
     * mathematical: P(genotype|phenotype)
     * words: the probability of identifying a certain genotype, given the phenotype
-    * calculation: the number of cases with the phenotype and the genotype, divided by the total number of cases.
     * It answers the question: if you have the disease, what is your genotype?
 * Penetrance: 
     * mathematical: P(phenotype|genotype)
     * words: the probability of seeing a certain phenotype, given the genotype
-    * calculation: the number of cases, divided by the sum of cases and the number of controls with the genotype but without the phenotype
     * It answers the question: if you have the mutation, what is the chance of you having the disease as well?
     
-Important: the penetrance level is influenced by the detectance level chosen earlier. If the detectance is reduced (e.g genetic heterogeneity is present), the penetrance is calculated based on the number of individuals with a shared genotype.
+Important: the penetrance level is influenced by the detectance level chosen earlier. If the detectance is reduced (e.g genetic heterogeneity is present), the penetrance is calculated based on the number of individuals with a shared genotype. Details on the calculation are provided in the accompanying paper. Importantly, each family should be analyzed separately.
 
 ## nDom and nRec
 
@@ -807,7 +805,7 @@ output
 The same function with one control and one case returns 3 variants in 3 genes for gDom and 2 variants and 2 genes for gRec. 
 
 ## Special example: reduced detectance and reduced penetrance
-Reduced penetrance and/or reduced detectance occur frequently, as discussed earlier. A practical example of how this comes in handy follows.
+Reduced penetrance and/or reduced detectance occurs frequently, as discussed earlier. How these situations can be handled practically is demonstrated with the following examples.
 
 First, four different files are prepared from the same starting file.
 ```{r, eval=FALSE}
